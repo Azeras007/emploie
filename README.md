@@ -48,7 +48,10 @@ La première visite sur `/admin` propose de créer le compte administrateur. Il 
    finit par `DATABASE_URL`, `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `DATABASE_URL_UNPOOLED`
    ou `POSTGRES_URL_NON_POOLING` — donc `STORAGE_DATABASE_URL` aussi bien que `DATABASE_URL`.
    Les variantes `NO_SSL` sont ignorées : la connexion à la base reste chiffrée.
-3. **Storage → Blob** : créez un magasin. Vercel injecte `BLOB_READ_WRITE_TOKEN`.
+3. **Storage → Blob** : créez un magasin **et reliez-le au projet** (*Connect Project*) —
+   créer le magasin ne suffit pas, c'est la connexion qui injecte le jeton. Comme pour la base,
+   un préfixe personnalisé est géré : l'app reconnaît tout nom finissant par
+   `BLOB_READ_WRITE_TOKEN`, donc `STORAGE_BLOB_READ_WRITE_TOKEN` aussi bien.
 4. **Settings → Environment Variables** : ajoutez `AUTH_SECRET`, généré par
    `openssl rand -base64 32`. Sans lui, l'espace admin refuse de démarrer — c'est voulu :
    il signe les sessions et les documents déposés.

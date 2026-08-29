@@ -2,6 +2,7 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import { DEFAULT_SETTINGS } from "./defaults";
+import { filesReport } from "./storage";
 import type { Applicant, Invite, Settings, User } from "./types";
 
 type Collection = "applicants" | "invites" | "users" | "meta";
@@ -99,11 +100,7 @@ export function envReport(): string[] {
       "Base de données : aucune variable reçue (aucun nom finissant par DATABASE_URL ou POSTGRES_URL)"
     );
 
-  lines.push(
-    (process.env.BLOB_READ_WRITE_TOKEN ?? "").trim() !== ""
-      ? "Documents : BLOB_READ_WRITE_TOKEN présent"
-      : "Documents : BLOB_READ_WRITE_TOKEN absent"
-  );
+  lines.push(filesReport());
   lines.push(
     (process.env.AUTH_SECRET ?? "").trim() !== ""
       ? "Sessions : AUTH_SECRET présent"

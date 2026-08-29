@@ -39,10 +39,12 @@ export default function Questionnaire({
   settings,
   inviteToken,
   inviteLabel,
+  uploadsProblem,
 }: {
   settings: Settings;
   inviteToken: string | null;
   inviteLabel?: string | null;
+  uploadsProblem?: string | null;
 }) {
   const router = useRouter();
   const questions = settings.questions;
@@ -232,6 +234,7 @@ export default function Questionnaire({
               jobTitle={settings.jobTitle}
               inviteLabel={inviteLabel}
               questionCount={questions.length}
+              uploadsProblem={uploadsProblem}
             />
           )}
 
@@ -313,6 +316,7 @@ function IdentityStep({
   jobTitle,
   inviteLabel,
   questionCount,
+  uploadsProblem,
 }: {
   identity: Identity;
   setIdentity: (patch: Partial<Identity>) => void;
@@ -320,6 +324,7 @@ function IdentityStep({
   jobTitle: string;
   inviteLabel?: string | null;
   questionCount: number;
+  uploadsProblem?: string | null;
 }) {
   return (
     <div className="max-w-measure">
@@ -329,6 +334,16 @@ function IdentityStep({
       <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
         {pad(questionCount)} questions · puis vos documents
       </p>
+
+      {uploadsProblem && (
+        <div className="mt-8 border border-ink p-4">
+          <p className="eyebrow">Dépôt de documents indisponible</p>
+          <p className="mt-2 text-[14px] leading-relaxed">
+            Le CV ne peut pas être reçu pour le moment. Prévenez votre contact plutôt que de
+            remplir le questionnaire : il serait perdu à la dernière étape.
+          </p>
+        </div>
+      )}
 
       <div className="mt-12 grid gap-x-8 gap-y-7 sm:grid-cols-2">
         <Field label="Prénom" required>
