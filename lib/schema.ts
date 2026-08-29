@@ -44,7 +44,6 @@ export const TABLES: Record<string, string[]> = {
     "mimeType",
     "sizeBytes",
     "storageKey",
-    "storageAccess",
     "uploadedAt",
   ],
   JobInviteLink: ["id", "token", "label", "createdAt", "uses", "active", "printed"],

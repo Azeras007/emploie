@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Une base qui ne répond pas et un stockage de documents absent sont deux pannes
   // distinctes : le recruteur doit savoir laquelle le concerne.
-  const uploads = filesProblem();
+  const uploads = await filesProblem();
   const problem = storage.ok ? uploads : storage.problem;
   const seen = problem ? envReport() : undefined;
 

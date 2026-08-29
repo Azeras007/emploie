@@ -85,7 +85,6 @@ interface DocumentRow {
   mimeType: string;
   sizeBytes: number;
   storageKey: string;
-  storageAccess: string | null;
   uploadedAt: Date;
 }
 
@@ -136,7 +135,6 @@ function rowsToApplicant(
       size: d.sizeBytes,
       key: d.storageKey,
       uploadedAt: d.uploadedAt.toISOString(),
-      ...(d.storageAccess ? { access: d.storageAccess as "public" | "private" } : {}),
     })),
     status: app.status as Applicant["status"],
     rating: app.rating,
@@ -287,8 +285,8 @@ export async function saveApplicant(
     for (const file of applicant.files) {
       await client.query(
         `insert into "JobApplicationDocument"
-           (id, "applicationId", kind, filename, "mimeType", "sizeBytes", "storageKey", "storageAccess", "uploadedAt")
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+           (id, "applicationId", kind, filename, "mimeType", "sizeBytes", "storageKey", "uploadedAt")
+         values ($1,$2,$3,$4,$5,$6,$7,$8)`,
         [
           file.id,
           applicant.id,
@@ -297,7 +295,6 @@ export async function saveApplicant(
           file.mime.slice(0, 160),
           file.size,
           file.key.slice(0, 500),
-          file.access ?? null,
           file.uploadedAt,
         ]
       );

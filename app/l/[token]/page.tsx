@@ -26,7 +26,7 @@ export default async function InvitedCandidaturePage({
       settings={settings}
       inviteToken={usable ? usable.token : null}
       inviteLabel={usable ? usable.label : null}
-      uploadsProblem={filesProblem()}
+      uploadsProblem={await filesProblem()}
     />
   );
 }

@@ -16,7 +16,6 @@ const fileSchema = z.object({
     size: z.number(),
     key: z.string(),
     uploadedAt: z.string(),
-    access: z.enum(["public", "private"]).optional(),
   }),
   signature: z.string(),
 });

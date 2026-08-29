@@ -17,9 +17,9 @@ interface Shape {
 const EMPTY: Shape = { applicants: {}, invites: {}, users: {}, meta: {} };
 
 /**
- * Vercel laisse préfixer les variables d'une intégration : Neon produit alors
- * STORAGE_DATABASE_URL plutôt que DATABASE_URL. Plutôt que de deviner les noms,
- * on reconnaît les suffixes, quel que soit le préfixe choisi.
+ * Certains hébergeurs préfixent les variables d'une intégration
+ * (STORAGE_DATABASE_URL plutôt que DATABASE_URL). Plutôt que de deviner les
+ * noms, on reconnaît les suffixes, quel que soit le préfixe.
  */
 const PG_URL_SUFFIXES = [
   "DATABASE_URL",
@@ -70,7 +70,7 @@ const { url: PG_URL, name: PG_URL_NAME, blankNames: PG_BLANK_NAMES } = findPgUrl
 
 export const DB_DRIVER: "postgres" | "file" = PG_URL ? "postgres" : "file";
 
-/** Vercel, et les plateformes du même genre, servent un disque en lecture seule. */
+/** Plateformes sans disque inscriptible durable (Vercel, Lambda…). */
 export const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 /** Erreur de stockage dont le message est destiné à être lu par un humain. */
@@ -139,9 +139,9 @@ export async function storageStatus(): Promise<StorageStatus> {
       driver: "file",
       seen: envReport(),
       problem:
-        `La variable ${PG_BLANK_NAMES.join(" et ")} existe mais est vide, donc aucune base n'est ` +
-        "reliée. Supprimez-la dans Settings → Environment Variables, puis reliez la base " +
-        "(Storage → Neon → Connect Project) : Vercel la recréera avec la bonne valeur.",
+        `La variable ${PG_BLANK_NAMES.join(" et ")} existe mais est vide, donc aucune base ` +
+        "n'est reliée. Renseignez-la avec l'adresse de la base Valeur Ajoutée, la même que " +
+        "celle du site, puis redémarrez l'application.",
     };
   }
 
@@ -151,10 +151,9 @@ export async function storageStatus(): Promise<StorageStatus> {
       driver: "file",
       seen: envReport(),
       problem:
-        "Aucune base de données n'est reliée. Ici le disque est en lecture seule : ni les comptes " +
-        "ni les candidatures ne peuvent être enregistrés. Dans Vercel, ouvrez Storage → " +
-        "Marketplace Database Providers → Neon, créez une base Postgres et reliez-la au projet, " +
-        "puis redéployez.",
+        "Aucune base de données n'est reliée, et le disque de cette plateforme est éphémère : " +
+        "ni les comptes ni les candidatures ne seraient conservés. Renseignez DATABASE_URL avec " +
+        "l'adresse de la base Valeur Ajoutée.",
     };
   }
 

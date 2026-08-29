@@ -32,8 +32,6 @@ export interface StoredFile {
   size: number;
   key: string;
   uploadedAt: string;
-  /** Mode de dépôt sur Vercel Blob, pour relire le document comme il a été écrit. */
-  access?: "public" | "private";
 }
 
 export type Status = "nouveau" | "en_revue" | "entretien" | "retenu" | "refuse";

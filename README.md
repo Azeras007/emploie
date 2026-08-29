@@ -70,9 +70,8 @@ une vitrine.
 
 ## Mettre en ligne sur le Mac Mini
 
-Cette application **doit tourner sur la même machine que le site** : elle écrit dans la base
-Valeur Ajoutée, dont `DATABASE_URL` pointe sur `localhost`. Un hébergement distant ne pourrait
-pas l'atteindre.
+L'application tourne sur la **même machine que le site** : elle écrit dans la base Valeur
+Ajoutée, dont `DATABASE_URL` pointe sur `localhost`.
 
 ```bash
 git clone https://github.com/Azeras007/emploie.git ~/valeur-ajoutee-recrutement
@@ -81,12 +80,12 @@ npm ci && npm run build
 pm2 start ecosystem.config.cjs && pm2 save
 ```
 
-Le `.env` de la machine doit contenir :
+Son `.env` (voir `.env.example`) :
 
 ```bash
 DATABASE_URL="postgresql://…@localhost:5432/valeur_ajoutee"   # la même que le site
 AUTH_SECRET="…"                                               # openssl rand -base64 32
-BLOB_READ_WRITE_TOKEN="…"                                     # stockage des CV
+UPLOAD_DIR="/Users/quentinmini/candidatures-fichiers"         # HORS du dépôt
 ```
 
 Puis, dans le `.env` **du site principal**, pour que `/candidature` soit servi :
@@ -98,35 +97,15 @@ RECRUTEMENT_URL=http://127.0.0.1:3210
 Les tables sont créées automatiquement au déploiement du site (`deploy.sh` lance
 `prisma db push`) : rien à faire côté base.
 
-## Mettre en ligne sur Vercel
+### Où vivent les CV
 
-Possible uniquement avec une base accessible depuis Internet (Neon, Supabase) — donc pas la
-base du Mac Mini.
+Sur le disque, dans `UPLOAD_DIR`, rangés par année et par mois. **Ce dossier doit être hors
+du dépôt** : le déploiement recopie l'application et effacerait un dossier situé à
+l'intérieur. En production, l'application refuse de démarrer sans le signaler si `UPLOAD_DIR`
+tombe dans son propre répertoire.
 
-1. Importez ce dépôt dans Vercel.
-2. **Storage → Marketplace Database Providers → Neon** : créez une base Postgres et reliez-la au
-   projet. Neon injecte `DATABASE_URL`. La table est créée toute seule au premier accès.
-   Supabase fait aussi l'affaire : n'importe quelle URL PostgreSQL convient.
-
-   Ne créez pas `DATABASE_URL` à la main avant cette étape : Vercel refuse alors de la créer
-   (« already has an existing environment variable »), et une variable vide ne relie rien.
-   Si c'est déjà fait, supprimez-la puis reliez la base.
-
-   Le préfixe personnalisé de Vercel est géré : l'app reconnaît toute variable dont le nom
-   finit par `DATABASE_URL`, `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `DATABASE_URL_UNPOOLED`
-   ou `POSTGRES_URL_NON_POOLING` — donc `STORAGE_DATABASE_URL` aussi bien que `DATABASE_URL`.
-   Les variantes `NO_SSL` sont ignorées : la connexion à la base reste chiffrée.
-3. **Storage → Blob** : créez un magasin **et reliez-le au projet** (*Connect Project*) —
-   créer le magasin ne suffit pas, c'est la connexion qui injecte le jeton. Comme pour la base,
-   un préfixe personnalisé est géré : l'app reconnaît tout nom finissant par
-   `BLOB_READ_WRITE_TOKEN`, donc `STORAGE_BLOB_READ_WRITE_TOKEN` aussi bien.
-4. **Settings → Environment Variables** : ajoutez `AUTH_SECRET`, généré par
-   `openssl rand -base64 32`. Sans lui, l'espace admin refuse de démarrer — c'est voulu :
-   il signe les sessions et les documents déposés.
-5. Déployez, ouvrez `/connexion`, créez votre compte.
-
-Sans base de données ni Blob, l'app fonctionne quand même sur Vercel — mais chaque déploiement
-efface les candidatures. Un bandeau vous le rappelle dans l'admin.
+Sauvegardez ce dossier avec votre base : les deux sont indissociables — la base référence des
+fichiers, les fichiers n'ont de sens que reliés à une candidature.
 
 ## Comment le tri fonctionne
 
@@ -174,7 +153,7 @@ appartient au dépôt du site principal, dans la migration
 |---|---|
 | `JobApplication` | Identité, statut, notes, référence, jetons de provenance et de partage |
 | `JobApplicationAnswer` | Une ligne par réponse, avec le libellé de la question recopié |
-| `JobApplicationDocument` | CV, lettre et pièces jointes — référence vers Vercel Blob |
+| `JobApplicationDocument` | CV, lettre et pièces jointes — chemin du fichier sur le disque |
 | `JobInviteLink` | Liens traçables et leur mention « imprimé » |
 | `Recruiter` | Le compte du back-office |
 | `RecruitmentSetting` | Questionnaire, règles de tri, seuil, domaine public |
@@ -210,22 +189,17 @@ candidature.
 
 ## Sous le capot
 
-Next.js 15 (App Router), TypeScript, Tailwind. Deux pilotes interchangeables pour la base
-(les tables relationnelles ci-dessus, ou un fichier JSON en développement) et pour les fichiers
-(Vercel Blob ou disque local), choisis au démarrage selon les variables d'environnement. Sessions par JWT signé dans un cookie
-`httpOnly`, mots de passe hachés avec bcrypt.
+Next.js 15 (App Router), TypeScript, Tailwind. Aucune dépendance à un hébergeur : les données
+vont dans PostgreSQL (un fichier JSON en développement), les documents sur le disque. Sessions
+par JWT signé dans un cookie `httpOnly`, mots de passe hachés avec bcrypt.
 
-Sur Vercel Blob, les documents sont déposés en **accès privé** : ils ne sortent du stockage que
-par `/api/fichiers`, qui vérifie la session administrateur ou le jeton de partage. Une URL
-publique, même imprévisible, resterait lisible à vie par quiconque la récupère — ce n'est pas
-une propriété acceptable pour un CV.
+Les documents ne sont jamais servis en statique : ils passent par `/candidature/api/fichiers`,
+qui vérifie la session administrateur ou le jeton de partage avant d'envoyer le moindre octet.
+Un CV n'est donc lisible que par vous, ou par qui reçoit un lien de partage. Les fichiers HTML
+et SVG sont toujours servis en téléchargement, jamais affichés dans la page : un CV piégé n'a
+rien à faire dans l'origine de l'application.
 
-Si le magasin refuse le mode privé, le dépôt bascule en public plutôt que d'échouer, et le mode
-retenu est enregistré avec le document. L'URL publique n'est jamais transmise au navigateur —
-l'aperçu et le téléchargement passent toujours par la route vérifiée — mais quiconque
-l'obtiendrait par un autre biais pourrait lire le fichier. Les journaux du déploiement notent
-chaque bascule.
-
-Les documents sont envoyés un par un avant l'envoi du formulaire : ça contourne la limite de
-4,5 Mo par requête sur Vercel et donne un retour immédiat au candidat. Chaque fichier revient
-signé (HMAC), et l'envoi final refuse tout document que le serveur n'a pas lui-même émis.
+Les documents sont envoyés un par un, avant la soumission du formulaire : le candidat voit
+chaque dépôt aboutir ou échouer immédiatement, plutôt que de découvrir un échec après avoir
+tout rempli. Chaque fichier revient signé (HMAC), et l'envoi final refuse tout document que le
+serveur n'a pas lui-même émis.

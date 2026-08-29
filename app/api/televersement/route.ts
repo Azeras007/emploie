@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { putFile, StorageWriteError, type BlobAccess } from "@/lib/storage";
+import { putFile, StorageWriteError } from "@/lib/storage";
 import { extOf, isAccepted, formatFor } from "@/lib/mime";
 import { uid } from "@/lib/ids";
 import { signFile } from "@/lib/signing";
@@ -8,7 +8,11 @@ import type { FileKind, StoredFile } from "@/lib/types";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-/** Vercel caps a request body at 4.5 Mo, so files are sent one at a time. */
+/**
+ * Les fichiers sont envoyés un par un, avant la soumission du formulaire : le
+ * candidat voit chaque dépôt aboutir ou échouer immédiatement, plutôt que de
+ * découvrir un échec après avoir tout rempli.
+ */
 const MAX_BYTES = 4 * 1024 * 1024;
 
 const KINDS: FileKind[] = ["cv", "lettre", "autre"];
@@ -51,11 +55,8 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await blob.arrayBuffer());
 
   let storedKey: string;
-  let storedAccess: BlobAccess | undefined;
   try {
-    const stored = await putFile(key, buffer, formatFor(blob.name, blob.type).mime);
-    storedKey = stored.key;
-    storedAccess = stored.access;
+    storedKey = (await putFile(key, buffer)).key;
   } catch (err) {
     console.error("Échec du stockage du fichier", err);
     return NextResponse.json(
@@ -77,7 +78,6 @@ export async function POST(req: Request) {
     size: blob.size,
     key: storedKey,
     uploadedAt: now.toISOString(),
-    ...(storedAccess ? { access: storedAccess } : {}),
   };
 
   return NextResponse.json({ file, signature: signFile(file) });
