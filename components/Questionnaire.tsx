@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
+import Logo from "@/components/Logo";
 import { ACCEPT_ATTRIBUTE, humanSize } from "@/lib/mime";
 import type { AnswerValue, FileKind, Identity, Question, Settings, StoredFile } from "@/lib/types";
 
@@ -206,18 +207,16 @@ export default function Questionnaire({
         <div className="progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
           <span style={{ width: `${Math.max(progress, 2)}%` }} />
         </div>
-        <div className="mx-auto flex max-w-[900px] items-center justify-between gap-4 px-5 py-4 md:px-8">
-          <div className="min-w-0">
-            <p className="truncate font-mono text-[11px] uppercase tracking-[0.16em]">
-              {settings.companyName}
-            </p>
-            <p className="truncate text-[13px] text-muted">{settings.jobTitle}</p>
+        <div className="mx-auto flex max-w-[900px] items-center justify-between gap-4 px-5 py-3.5 md:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <Logo height={24} className="sm:hidden" priority />
+            <Logo height={28} className="hidden sm:inline-flex" priority />
+            <span className="hidden h-6 w-px bg-custom3 sm:block" />
+            <p className="hidden truncate text-[13px] text-custom1 sm:block">{settings.jobTitle}</p>
           </div>
-          <p className="shrink-0 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
-            {stepLabel}
-          </p>
+          <p className="shrink-0 text-[12px] font-semibold text-custom2">{stepLabel}</p>
         </div>
-        <div className="border-b border-rule" />
+        <div className="border-b border-custom3" />
       </header>
 
       {/* Contenu */}
@@ -266,7 +265,7 @@ export default function Questionnaire({
       </main>
 
       {/* Barre d'action */}
-      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-paper">
+      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-custom3 bg-white">
         <div className="mx-auto flex max-w-[900px] items-center justify-between gap-3 px-5 py-3.5 md:px-8">
           <button
             type="button"
@@ -279,7 +278,7 @@ export default function Questionnaire({
 
           <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
             {error && (
-              <p role="alert" className="truncate text-right text-[13px] text-ink">
+              <p role="alert" className="truncate text-right text-[13px] font-medium text-primaire-hover">
                 {error}
               </p>
             )}
@@ -303,8 +302,8 @@ export default function Questionnaire({
 
 function BigNumber({ value }: { value: string }) {
   return (
-    <span className="display block text-[13px] tabular-nums text-muted md:absolute md:-left-24 md:top-1.5 md:text-[15px]">
-      <span className="font-mono">{value}</span>
+    <span className="block text-[13px] font-bold tabular-nums text-primaire md:absolute md:-left-24 md:top-2 md:text-[15px]">
+      {value}
     </span>
   );
 }
@@ -331,13 +330,13 @@ function IdentityStep({
       <p className="eyebrow">{inviteLabel ? `Invitation — ${inviteLabel}` : "Candidature"}</p>
       <h1 className="display mt-4 text-[34px] leading-[1.05] md:text-[52px]">{jobTitle}</h1>
       <p className="mt-5 text-[16px] leading-relaxed text-muted md:text-[17px]">{intro}</p>
-      <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+      <p className="mt-4 inline-flex rounded-full bg-primaire/10 px-3.5 py-1.5 text-[12px] font-semibold text-primaire-hover">
         {pad(questionCount)} questions · puis vos documents
       </p>
 
       {uploadsProblem && (
-        <div className="mt-8 border border-ink p-4">
-          <p className="eyebrow">Dépôt de documents indisponible</p>
+        <div className="mt-8 rounded-2xl border border-primaire/30 bg-primaire/5 p-4">
+          <p className="eyebrow text-primaire-hover">Dépôt de documents indisponible</p>
           <p className="mt-2 text-[14px] leading-relaxed">
             Le CV ne peut pas être reçu pour le moment. Prévenez votre contact plutôt que de
             remplir le questionnaire : il serait perdu à la dernière étape.
@@ -440,10 +439,10 @@ function QuestionStep({
       <BigNumber value={`${pad(index)}/${pad(total)}`} />
       <h2 className="display mt-3 text-[26px] leading-[1.15] md:mt-0 md:text-[34px]">
         {question.label}
-        {question.required ? <span className="text-muted">&nbsp;*</span> : null}
+        {question.required ? <span className="text-primaire">&nbsp;*</span> : null}
       </h2>
       {question.hint && (
-        <p className="mt-3 text-[15px] leading-relaxed text-muted">{question.hint}</p>
+        <p className="mt-3 text-[15px] leading-relaxed text-custom1">{question.hint}</p>
       )}
 
       <div className="mt-8">
@@ -468,7 +467,7 @@ function AnswerInput({
 
   if (question.type === "single") {
     return (
-      <ul className="border-t border-rule">
+      <ul className="space-y-2.5">
         {options.map((option) => {
           const selected = value === option;
           return (
@@ -481,16 +480,20 @@ function AnswerInput({
                 }}
                 aria-pressed={selected}
                 className={clsx(
-                  "flex w-full items-center gap-3.5 border-b border-rule px-1 py-4 text-left text-[16px] transition-colors",
-                  selected ? "bg-ink text-paper" : "hover:bg-wash"
+                  "flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-left text-[16px] transition-colors",
+                  selected
+                    ? "border-primaire bg-primaire/10 font-semibold text-primaire-hover"
+                    : "border-custom3 bg-white hover:border-primaire/50 hover:bg-primaire/5"
                 )}
               >
                 <span
                   className={clsx(
-                    "h-3 w-3 shrink-0 rounded-full border",
-                    selected ? "border-paper bg-paper" : "border-ink/40"
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                    selected ? "border-primaire" : "border-custom3"
                   )}
-                />
+                >
+                  {selected && <span className="h-2.5 w-2.5 rounded-full bg-primaire" />}
+                </span>
                 <span>{option}</span>
               </button>
             </li>
@@ -504,7 +507,7 @@ function AnswerInput({
     const list = Array.isArray(value) ? value : [];
     return (
       <>
-        <ul className="border-t border-rule">
+        <ul className="space-y-2.5">
           {options.map((option) => {
             const selected = list.includes(option);
             return (
@@ -518,17 +521,23 @@ function AnswerInput({
                   }
                   aria-pressed={selected}
                   className={clsx(
-                    "flex w-full items-center gap-3.5 border-b border-rule px-1 py-4 text-left text-[16px] transition-colors",
-                    selected ? "bg-ink text-paper" : "hover:bg-wash"
+                    "flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-left text-[16px] transition-colors",
+                    selected
+                      ? "border-primaire bg-primaire/10 font-semibold text-primaire-hover"
+                      : "border-custom3 bg-white hover:border-primaire/50 hover:bg-primaire/5"
                   )}
                 >
                   <span
                     className={clsx(
-                      "flex h-3.5 w-3.5 shrink-0 items-center justify-center border",
-                      selected ? "border-paper bg-paper" : "border-ink/40"
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors",
+                      selected ? "border-primaire bg-primaire" : "border-custom3"
                     )}
                   >
-                    {selected && <span className="h-1.5 w-1.5 bg-ink" />}
+                    {selected && (
+                      <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
+                        <path d="M2 6.2 4.6 8.8 10 3.4" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
                   </span>
                   <span>{option}</span>
                 </button>
@@ -536,7 +545,7 @@ function AnswerInput({
             );
           })}
         </ul>
-        <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+        <p className="mt-3 text-[13px] font-medium text-custom1">
           {list.length} sélectionné{list.length > 1 ? "s" : ""}
         </p>
       </>
@@ -558,8 +567,10 @@ function AnswerInput({
               window.setTimeout(onAdvance, 180);
             }}
             className={clsx(
-              "h-12 w-12 border font-mono text-[14px] tabular-nums transition-colors",
-              value === n ? "border-ink bg-ink text-paper" : "border-rule hover:border-ink"
+              "h-12 w-12 rounded-full border text-[15px] font-semibold tabular-nums transition-colors",
+              value === n
+                ? "border-primaire bg-primaire text-white"
+                : "border-custom3 bg-white hover:border-primaire hover:text-primaire"
             )}
           >
             {n}
@@ -573,7 +584,7 @@ function AnswerInput({
     return (
       <div className="flex items-baseline gap-3">
         <input
-          className="field max-w-[220px] font-mono text-[24px] tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="field max-w-[220px] text-[24px] font-semibold tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           type="number"
           inputMode="numeric"
           min={question.min}
@@ -583,7 +594,7 @@ function AnswerInput({
           placeholder={question.placeholder}
           autoFocus
         />
-        {question.unit && <span className="text-[14px] text-muted">{question.unit}</span>}
+        {question.unit && <span className="text-[14px] font-medium text-custom1">{question.unit}</span>}
       </div>
     );
   }
@@ -599,7 +610,7 @@ function AnswerInput({
           placeholder={question.placeholder}
           maxLength={4000}
         />
-        <p className="mt-2 text-right font-mono text-[11px] tabular-nums text-muted">
+        <p className="mt-2 text-right text-[12px] tabular-nums text-custom2">
           {text.length} / 4000
         </p>
       </>
@@ -630,7 +641,7 @@ function DocumentsStep({
     <div className="max-w-measure">
       <p className="eyebrow">Dernière étape</p>
       <h2 className="display mt-4 text-[26px] leading-[1.15] md:text-[34px]">Vos documents</h2>
-      <p className="mt-3 text-[15px] leading-relaxed text-muted">
+      <p className="mt-3 text-[15px] leading-relaxed text-custom1">
         PDF, Word, OpenDocument ou image — 4 Mo par fichier. Le CV est obligatoire.
       </p>
 
@@ -702,7 +713,7 @@ function Dropzone({
           {label}
           {required ? "\u00a0*" : ""}
         </p>
-        <p className="text-[12px] text-muted">{hint}</p>
+        <p className="text-[12px] text-custom2">{hint}</p>
       </div>
 
       <div
@@ -717,19 +728,19 @@ function Dropzone({
           handleFiles(e.dataTransfer.files);
         }}
         className={clsx(
-          "mt-2 border border-dashed transition-colors",
-          over ? "border-ink bg-wash" : "border-rule"
+          "mt-2 rounded-2xl border-2 border-dashed transition-colors",
+          over ? "border-primaire bg-primaire/5" : "border-custom3 bg-wash"
         )}
       >
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex w-full items-center justify-center gap-2 px-4 py-7 text-[14px] text-muted transition-colors hover:text-ink"
+          className="flex w-full items-center justify-center gap-2 px-4 py-8 text-[14px] text-custom1 transition-colors hover:text-primaire"
         >
-          <span className="font-mono text-[11px] uppercase tracking-[0.16em]">
+          <span className="text-[14px] font-semibold">
             {mine.length && !multiple ? "Remplacer le fichier" : "Choisir un fichier"}
           </span>
-          <span className="hidden sm:inline">ou glissez-le ici</span>
+          <span className="hidden sm:inline text-custom2">ou glissez-le ici</span>
         </button>
         <input
           ref={inputRef}
@@ -745,14 +756,19 @@ function Dropzone({
       </div>
 
       {mine.length > 0 && (
-        <ul className="mt-3 space-y-px">
+        <ul className="mt-3 space-y-2">
           {mine.map((u) => (
             <li
               key={u.localId}
-              className="flex items-center gap-3 border border-rule px-3 py-2.5 text-[14px]"
+              className="flex items-center gap-3 rounded-xl border border-custom3 bg-white px-4 py-3 text-[14px]"
             >
               <span className="min-w-0 flex-1 truncate">{u.name}</span>
-              <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">
+              <span
+                className={clsx(
+                  "shrink-0 text-[12px] font-medium tabular-nums",
+                  u.state === "erreur" ? "text-primaire-hover" : "text-custom2"
+                )}
+              >
                 {u.state === "envoi"
                   ? "envoi…"
                   : u.state === "erreur"
@@ -762,7 +778,7 @@ function Dropzone({
               <button
                 type="button"
                 onClick={() => onRemove(u.localId)}
-                className="shrink-0 font-mono text-[11px] uppercase tracking-[0.14em] text-muted hover:text-ink"
+                className="shrink-0 text-[13px] font-semibold text-custom1 transition-colors hover:text-primaire"
                 aria-label={`Retirer ${u.name}`}
               >
                 Retirer
@@ -773,7 +789,9 @@ function Dropzone({
       )}
 
       {mine.some((u) => u.state === "erreur") && (
-        <p className="mt-2 text-[13px]">{mine.find((u) => u.state === "erreur")?.error}</p>
+        <p className="mt-2 rounded-xl bg-primaire/10 px-3 py-2 text-[13px] text-primaire-hover">
+          {mine.find((u) => u.state === "erreur")?.error}
+        </p>
       )}
     </section>
   );
@@ -802,15 +820,15 @@ function ReviewStep({
     <div className="max-w-measure">
       <p className="eyebrow">Avant l'envoi</p>
       <h2 className="display mt-4 text-[26px] leading-[1.15] md:text-[34px]">Relisez-vous</h2>
-      <p className="mt-3 text-[15px] leading-relaxed text-muted">
+      <p className="mt-3 text-[15px] leading-relaxed text-custom1">
         Tout est modifiable : touchez une ligne pour y revenir.
       </p>
 
-      <dl className="mt-10 border-t border-rule">
+      <dl className="mt-8 overflow-hidden rounded-2xl border border-custom3 bg-white">
         <ReviewRow label="Vous" onClick={() => onJump(0)}>
           {identity.firstName} {identity.lastName}
           <br />
-          <span className="text-muted">
+          <span className="text-custom1">
             {identity.email}
             {identity.phone ? ` · ${identity.phone}` : ""}
             {identity.city ? ` · ${identity.city}` : ""}
@@ -843,16 +861,16 @@ function ReviewRow({
   onClick: () => void;
 }) {
   return (
-    <div className="border-b border-rule">
+    <div className="border-b border-custom3 last:border-b-0">
       <button
         type="button"
         onClick={onClick}
-        className="group grid w-full grid-cols-1 gap-1 py-4 text-left transition-colors hover:bg-wash sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-6"
+        className="group grid w-full grid-cols-1 gap-1 px-4 py-4 text-left transition-colors hover:bg-primaire/5 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-6"
       >
         <dt className="eyebrow pt-0.5">{label}</dt>
         <dd className="flex items-start justify-between gap-4 text-[15px] leading-relaxed">
           <span className="min-w-0 whitespace-pre-wrap break-words">{children}</span>
-          <span className="mt-0.5 shrink-0 font-mono text-[11px] uppercase tracking-[0.14em] text-muted opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="mt-0.5 shrink-0 text-[12px] font-semibold text-primaire opacity-0 transition-opacity group-hover:opacity-100">
             Modifier
           </span>
         </dd>

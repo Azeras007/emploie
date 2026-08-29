@@ -2,13 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+ * DESIGN TOKENS — repris de Valeur Ajoutée (src/app/globals.css).
+ * Pour changer l'identité visuelle, modifier uniquement ces hex.
+ * ───────────────────────────────────────────────────────────── */
 :root {
-  --ink: #0b0b0c;
-  --paper: #ffffff;
-  --rule: #e4e4e4;
-  --rule-soft: #f0f0f0;
-  --muted: #6e6e73;
-  --wash: #f6f6f6;
+  --primaire: #f46f40;
+  --primaire-hover: #d95a2e;
+  --secondaire: #234737;
+  --terciaire: #ffffff;
+  --black: #000000;
+  --white: #ffffff;
+  --custom1: #5b5b5b;
+  --custom2: #a0a0a0;
+  --custom3: #dbdbdb;
+
+  --background: var(--terciaire);
+  --foreground: var(--black);
+  --panel: var(--white);
+  --stroke: var(--custom3);
+  --muted: var(--custom1);
+  --accent: var(--primaire);
+  --accent-hover: var(--primaire-hover);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
 }
 
 @layer base {
@@ -19,21 +39,20 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    background: var(--paper);
-    color: var(--ink);
+    background: var(--background);
+    color: var(--foreground);
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: "ss01", "cv01";
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
   }
   ::selection {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--primaire);
+    color: var(--white);
   }
   :focus-visible {
-    outline: 2px solid var(--ink);
+    outline: 2px solid var(--primaire);
     outline-offset: 2px;
-    border-radius: 1px;
+    border-radius: 4px;
   }
   input,
   textarea,
@@ -42,7 +61,14 @@
     font: inherit;
     color: inherit;
   }
-  /* iOS zooms in on focus below 16px. */
+  /* Curseurs et cases natifs : à l'orange de marque. */
+  input[type="range"],
+  input[type="checkbox"],
+  input[type="radio"],
+  progress {
+    accent-color: var(--primaire);
+  }
+  /* iOS zoome sur les champs sous 16px. */
   @media (max-width: 767px) {
     input,
     textarea,
@@ -53,81 +79,86 @@
 }
 
 @layer components {
+  /* Petit label de section : Manrope en capitales espacées. */
   .eyebrow {
-    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-muted;
-  }
-
-  .rule-t {
-    @apply border-t border-rule;
-  }
-
-  .field {
-    @apply w-full border-b border-rule bg-transparent py-3 text-[17px] outline-none
-           transition-colors placeholder:text-muted/60 focus:border-ink;
-  }
-
-  .box {
-    @apply w-full rounded-none border border-rule bg-paper px-3 py-2.5 text-[15px]
-           outline-none transition-colors focus:border-ink;
-  }
-
-  .btn {
-    @apply inline-flex select-none items-center justify-center gap-2 border border-ink
-           bg-ink px-5 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-paper
-           transition-all duration-150 hover:bg-paper hover:text-ink
-           disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-ink
-           disabled:hover:text-paper;
-  }
-
-  .btn-ghost {
-    @apply inline-flex select-none items-center justify-center gap-2 border border-rule
-           bg-paper px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-ink
-           transition-all duration-150 hover:border-ink disabled:opacity-30;
-  }
-
-  .btn-quiet {
-    @apply inline-flex select-none items-center gap-1.5 font-mono text-[11px] uppercase
-           tracking-[0.14em] text-muted transition-colors hover:text-ink;
-  }
-
-  .card {
-    @apply border border-rule bg-paper;
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-custom2;
   }
 
   .display {
-    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: -0.035em;
-    font-weight: 600;
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* Champ souligné, pour les formulaires aérés du questionnaire. */
+  .field {
+    @apply w-full rounded-lg border border-custom3 bg-white px-4 py-3 text-[15px]
+           outline-none transition-colors placeholder:text-custom2
+           focus:border-primaire;
+  }
+
+  .box {
+    @apply w-full rounded-lg border border-custom3 bg-white px-4 py-3 text-[15px]
+           outline-none transition-colors placeholder:text-custom2
+           focus:border-primaire;
+  }
+
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-full
+           bg-primaire px-6 py-3 text-sm font-semibold text-white transition-colors
+           hover:bg-primaire-hover disabled:cursor-not-allowed disabled:opacity-40
+           disabled:hover:bg-primaire;
+  }
+
+  .btn-ghost {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-full
+           border border-custom3 bg-white px-5 py-2.5 text-sm font-semibold text-black
+           transition-colors hover:border-primaire hover:text-primaire
+           disabled:opacity-40;
+  }
+
+  .btn-quiet {
+    @apply inline-flex select-none items-center gap-1.5 text-sm font-semibold
+           text-custom1 transition-colors hover:text-primaire;
+  }
+
+  .card {
+    @apply rounded-2xl border border-custom3 bg-white;
+  }
+
+  .pill {
+    @apply inline-flex items-center rounded-full border px-3 py-1.5 text-[13px]
+           font-medium transition-colors;
   }
 }
 
-/* The score gauge: eight cells, filled from the left. */
+/* Jauge de score : barres arrondies, remplies en orange de marque. */
 .gauge {
   display: inline-flex;
-  gap: 2px;
+  gap: 3px;
   align-items: center;
 }
 .gauge i {
   display: block;
-  width: 5px;
-  height: 12px;
-  border: 1px solid var(--ink);
-  opacity: 0.22;
+  width: 6px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--custom3);
 }
 .gauge i[data-on="1"] {
-  background: var(--ink);
-  opacity: 1;
+  background: var(--primaire);
 }
 
-/* Progress hairline for the questionnaire. */
+/* Filet de progression du questionnaire. */
 .progress {
-  height: 2px;
-  background: var(--rule-soft);
+  height: 3px;
+  background: var(--custom3);
 }
 .progress > span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  border-radius: 999px;
+  background: var(--primaire);
   transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -145,6 +176,14 @@
   animation: riseIn 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -154,17 +193,17 @@
   }
 }
 
-/* Rendered document preview (docx / text). */
+/* Rendu des documents convertis (docx, texte). */
 .doc-render {
   font-size: 14px;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 .doc-render h1,
 .doc-render h2,
 .doc-render h3 {
-  font-family: var(--font-display), sans-serif;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  font-weight: 600;
   margin: 1.4em 0 0.5em;
 }
 .doc-render h1 { font-size: 1.35em; }
@@ -175,8 +214,8 @@
 .doc-render ol { margin: 0 0 0.85em 1.15em; list-style: disc; }
 .doc-render ol { list-style: decimal; }
 .doc-render li { margin-bottom: 0.3em; }
-.doc-render a { text-decoration: underline; }
+.doc-render a { color: var(--primaire); text-decoration: underline; text-underline-offset: 3px; }
 .doc-render table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
 .doc-render td,
-.doc-render th { border: 1px solid var(--rule); padding: 6px 8px; text-align: left; }
-.doc-render img { max-width: 100%; height: auto; }
+.doc-render th { border: 1px solid var(--stroke); padding: 6px 8px; text-align: left; }
+.doc-render img { max-width: 100%; height: auto; border-radius: 8px; }

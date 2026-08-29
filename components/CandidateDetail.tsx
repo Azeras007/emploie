@@ -108,21 +108,21 @@ export default function CandidateDetail({
       </Link>
 
       {/* Entête du dossier */}
-      <header className="mt-5 border-b border-rule pb-7">
+      <header className="mt-5 rounded-2xl border border-custom3 bg-white p-5 shadow-soft md:p-7">
         <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
           <div className="min-w-0">
-            <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-muted">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-custom2">
               {applicant.ref} · reçu le {longDate(applicant.createdAt)}
             </p>
-            <h1 className="display mt-2 text-[32px] leading-[1.02] md:text-[46px]">
+            <h1 className="display mt-2 text-[32px] leading-[1.05] md:text-[44px]">
               {applicant.identity.firstName} {applicant.identity.lastName}
             </h1>
-            <p className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
-              <a className="underline underline-offset-4 hover:text-ink" href={`mailto:${applicant.identity.email}`}>
+            <p className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-custom1">
+              <a className="font-medium underline underline-offset-4 transition-colors hover:text-primaire" href={`mailto:${applicant.identity.email}`}>
                 {applicant.identity.email}
               </a>
               {applicant.identity.phone && (
-                <a className="underline underline-offset-4 hover:text-ink" href={`tel:${applicant.identity.phone}`}>
+                <a className="font-medium underline underline-offset-4 transition-colors hover:text-primaire" href={`tel:${applicant.identity.phone}`}>
                   {applicant.identity.phone}
                 </a>
               )}
@@ -133,36 +133,45 @@ export default function CandidateDetail({
           <div className="shrink-0">
             <p className="eyebrow">Score de pertinence</p>
             <div className="mt-2 flex items-baseline gap-3">
-              <span className="display text-[40px] tabular-nums leading-none">{score.percent}</span>
-              <span className="font-mono text-[12px] text-muted">/ 100</span>
+              <span className="display text-[44px] tabular-nums leading-none text-primaire">{score.percent}</span>
+              <span className="text-[13px] font-semibold text-custom2">/ 100</span>
             </div>
             <div className="mt-2.5">
               <Gauge percent={score.disqualified ? 0 : score.percent} />
             </div>
-            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+            <p
+              className={clsx(
+                "pill mt-3 text-[12px]",
+                score.disqualified
+                  ? "border-custom3 bg-wash text-custom2"
+                  : score.pertinent
+                    ? "border-secondaire/30 bg-secondaire/10 text-secondaire"
+                    : "border-custom3 bg-wash text-custom1"
+              )}
+            >
               {score.disqualified
                 ? "Écarté par un critère"
                 : score.pertinent
-                  ? `Pertinent (seuil ${settings.threshold})`
+                  ? `Pertinent · seuil ${settings.threshold}`
                   : `Sous le seuil de ${settings.threshold}`}
             </p>
           </div>
         </div>
 
         {/* Statut */}
-        <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-custom3 pt-6">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="eyebrow mr-1">Statut</span>
+            <span className="eyebrow mr-1 self-center">Statut</span>
             {STATUSES.map((s) => (
               <button
                 key={s.value}
                 type="button"
                 onClick={() => changeStatus(s.value)}
                 className={clsx(
-                  "border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors",
+                  "rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
                   status === s.value
-                    ? "border-ink bg-ink text-paper"
-                    : "border-rule text-muted hover:border-ink hover:text-ink"
+                    ? "border-primaire bg-primaire text-white"
+                    : "border-custom3 bg-white text-custom1 hover:border-primaire hover:text-primaire"
                 )}
               >
                 {s.label}
@@ -172,9 +181,7 @@ export default function CandidateDetail({
 
           <div className="ml-auto flex items-center gap-4">
             {saved && (
-              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                {saved}
-              </span>
+              <span className="text-[12px] font-semibold text-secondaire">{saved}</span>
             )}
             <button type="button" onClick={remove} className="btn-quiet">
               Supprimer
@@ -184,7 +191,7 @@ export default function CandidateDetail({
       </header>
 
       {/* Onglets mobile */}
-      <div className="sticky top-[57px] z-10 -mx-5 mt-0 border-b border-rule bg-paper px-5 md:hidden">
+      <div className="sticky top-[57px] z-10 -mx-5 mt-4 border-b border-custom3 bg-white px-5 md:hidden">
         <div className="flex">
           {(["reponses", "documents"] as const).map((key) => (
             <button
@@ -192,8 +199,8 @@ export default function CandidateDetail({
               type="button"
               onClick={() => selectTab(key)}
               className={clsx(
-                "flex-1 border-b-2 py-3 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors",
-                tab === key ? "border-ink text-ink" : "border-transparent text-muted"
+                "flex-1 border-b-2 py-3.5 text-[14px] font-semibold transition-colors",
+                tab === key ? "border-primaire text-primaire" : "border-transparent text-custom1"
               )}
             >
               {key === "reponses" ? "Réponses" : `Documents (${applicant.files.length})`}
@@ -207,7 +214,7 @@ export default function CandidateDetail({
         <section className={clsx("min-w-0", tab === "reponses" ? "block" : "hidden", "md:block")}>
           <h2 className="eyebrow">Le questionnaire</h2>
 
-          <dl className="mt-4 border-t border-rule">
+          <dl className="mt-4 overflow-hidden rounded-2xl border border-custom3 bg-white">
             {answered.map((q, i) => (
               <AnswerRow
                 key={q.id}
@@ -229,10 +236,10 @@ export default function CandidateDetail({
           </dl>
 
           {/* Détail du score */}
-          <h2 className="eyebrow mt-12">Pourquoi ce score</h2>
-          <ul className="mt-4 border-t border-rule">
+          <h2 className="eyebrow mt-10">Pourquoi ce score</h2>
+          <ul className="mt-4 overflow-hidden rounded-2xl border border-custom3 bg-white">
             {score.reasons.length === 0 && (
-              <li className="border-b border-rule py-4 text-[14px] text-muted">
+              <li className="px-4 py-4 text-[14px] text-custom1">
                 Aucun critère actif. Définissez-en dans les réglages.
               </li>
             )}
@@ -243,22 +250,20 @@ export default function CandidateDetail({
               return (
                 <li
                   key={reason.ruleId}
-                  className="flex items-center gap-3 border-b border-rule py-3 text-[14px]"
+                  className="flex items-center gap-3 border-b border-custom3 px-4 py-3 text-[14px] last:border-b-0"
                 >
                   <span
                     aria-hidden="true"
                     className={clsx(
-                      "flex h-4 w-4 shrink-0 items-center justify-center border border-ink text-[10px]",
-                      good ? "bg-ink text-paper" : "text-muted opacity-40"
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                      good ? "bg-secondaire text-white" : "bg-wash text-custom2"
                     )}
                   >
                     {good ? "✓" : "×"}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{reason.label}</span>
-                  <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                    {mode?.label}
-                  </span>
-                  <span className="w-12 shrink-0 text-right font-mono text-[12px] tabular-nums">
+                  <span className="hidden shrink-0 text-[12px] text-custom2 sm:inline">{mode?.label}</span>
+                  <span className="w-12 shrink-0 text-right text-[13px] font-semibold tabular-nums">
                     {reason.mode === "malus" ? "−" : "+"}
                     {reason.points}
                   </span>
@@ -268,7 +273,7 @@ export default function CandidateDetail({
           </ul>
 
           {/* Notes */}
-          <h2 className="eyebrow mt-12">Vos notes</h2>
+          <h2 className="eyebrow mt-10">Vos notes</h2>
           <textarea
             className="box mt-3 min-h-[130px] resize-y leading-relaxed"
             placeholder="Ce que vous retenez de ce profil…"
@@ -315,22 +320,22 @@ function AnswerRow({
     (Array.isArray(value) && value.length === 0);
 
   return (
-    <div className="border-b border-rule py-4">
+    <div className="border-b border-custom3 px-4 py-4 last:border-b-0">
       <dt className="flex items-baseline gap-2.5">
         {index !== undefined && (
-          <span className="font-mono text-[11px] tabular-nums text-muted">
+          <span className="text-[11px] font-bold tabular-nums text-primaire">
             {String(index).padStart(2, "0")}
           </span>
         )}
-        <span className="text-[13px] leading-snug text-muted">{label}</span>
+        <span className="text-[13px] leading-snug text-custom1">{label}</span>
       </dt>
       <dd className={clsx("mt-2", index !== undefined && "pl-[1.9rem]")}>
         {empty ? (
-          <span className="text-[15px] text-muted">Sans réponse</span>
+          <span className="text-[15px] text-custom2">Sans réponse</span>
         ) : Array.isArray(value) ? (
           <ul className="flex flex-wrap gap-1.5">
             {value.map((v) => (
-              <li key={v} className="border border-rule px-2.5 py-1 text-[13px]">
+              <li key={v} className="rounded-full border border-primaire/25 bg-primaire/5 px-3 py-1 text-[13px] font-medium text-primaire-hover">
                 {v}
               </li>
             ))}
@@ -339,8 +344,8 @@ function AnswerRow({
           <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{String(value)}</p>
         ) : typeof value === "number" ? (
           <p className="text-[17px] leading-snug">
-            <span className="tabular-nums">{value.toLocaleString("fr-FR")}</span>
-            {unit ? <span className="text-muted"> {unit}</span> : null}
+            <span className="font-semibold tabular-nums">{value.toLocaleString("fr-FR")}</span>
+            {unit ? <span className="text-custom1"> {unit}</span> : null}
           </p>
         ) : (
           <p className="text-[17px] leading-snug">{String(value)}</p>

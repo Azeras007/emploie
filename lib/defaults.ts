@@ -69,7 +69,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hideDisqualified: false,
   defaultSort: "score",
   jobTitle: "Candidature spontanée",
-  companyName: "Maud",
+  companyName: "Valeur Ajoutée",
   intro:
     "Dix questions, cinq minutes. Prenez le temps de répondre franchement : c'est ce qui nous permet de bien vous lire.",
 };

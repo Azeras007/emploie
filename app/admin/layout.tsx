@@ -10,7 +10,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getSession();
   if (!session) redirect("/connexion");
 
-  const [settings, storage] = await Promise.all([getSettings(), storageStatus()]);
+  const [, storage] = await Promise.all([getSettings(), storageStatus()]);
 
   // Une base qui ne répond pas et un stockage de documents absent sont deux pannes
   // distinctes : le recruteur doit savoir laquelle le concerne.
@@ -22,7 +22,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-dvh">
       <AdminNav
         username={session.username}
-        brand={settings.companyName}
         ephemeral={!problem && DB_DRIVER === "file"}
         problem={problem ?? undefined}
         seen={seen}

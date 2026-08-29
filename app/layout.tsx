@@ -1,31 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 
-const display = Archivo({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Mêmes familles que le site Valeur Ajoutée.
+const display = Fraunces({
   variable: "--font-display",
+  subsets: ["latin"],
   display: "swap",
 });
 
-const sans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const sans = Manrope({
   variable: "--font-sans",
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Candidatures",
+  title: {
+    default: "Recrutement — Valeur Ajoutée",
+    template: "%s — Valeur Ajoutée",
+  },
   description: "Questionnaire de candidature et suivi des dossiers.",
+  applicationName: "Valeur Ajoutée",
+  icons: { icon: "/logo-192.png", apple: "/apple-touch-icon.png" },
   robots: { index: false, follow: false },
 };
 
@@ -38,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="fr" className={`${display.variable} ${sans.variable}`}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

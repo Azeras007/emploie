@@ -1,7 +1,7 @@
-# Candidatures
+# Candidatures — Valeur Ajoutée
 
-Un questionnaire de candidature et le back-office pour le dépouiller. Noir et blanc, sans fioriture,
-utilisable au doigt sur un téléphone.
+Un questionnaire de candidature et le back-office pour le dépouiller, aux couleurs de
+Valeur Ajoutée, utilisable au doigt sur un téléphone.
 
 - **Côté candidat** — un lien, dix questions posées une par une, puis le dépôt du CV et de la lettre.
 - **Côté recruteur** — un compte (identifiant + mot de passe, pas d'e-mail), la liste des dossiers
@@ -84,6 +84,17 @@ S'affichent directement dans la fiche : les PDF, les images, les `.docx` (conver
 tout ce qui est du texte. Les autres formats se téléchargent. Les fichiers HTML ou SVG sont
 toujours servis en téléchargement, jamais affichés dans la page : un CV piégé n'a rien à faire
 dans l'origine de l'application.
+
+## Identité visuelle
+
+Palette, typographie et logotype repris du site Valeur Ajoutée
+(`/Users/laurans/Code/Valeur_ajoutee`) : orange `#f46f40` et vert `#234737`, gris neutres
+`#5b5b5b` / `#a0a0a0` / `#dbdbdb`, Fraunces pour les titres et Manrope pour le texte, formes
+généreusement arrondies et ombres douces.
+
+Les valeurs sont regroupées en tête de `app/globals.css` — les changer là suffit à changer
+l'identité de toute l'application. Le logotype vit dans `public/logos/LOGO-TEXTE.jpg` et
+s'insère via le composant `components/Logo.tsx`.
 
 ## Sous le capot
 

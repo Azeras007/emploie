@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { Empty, Score, StatusDot } from "@/components/ui";
+import { Empty, Score, StatusDot, StatusPill } from "@/components/ui";
 import { STATUSES, type Settings, type Status } from "@/lib/types";
 import type { ScoredApplicant } from "@/lib/scoring";
 
@@ -91,7 +91,7 @@ export default function PipelineClient({
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <p className="eyebrow">{settings.jobTitle}</p>
-          <h1 className="display mt-2 text-[30px] leading-[1.05] md:text-[40px]">Dossiers</h1>
+          <h1 className="display mt-2 text-[32px] leading-[1.05] md:text-[42px]">Dossiers</h1>
         </div>
 
         <dl className="grid w-full grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:w-auto sm:flex-wrap sm:items-end sm:gap-x-8 sm:gap-y-3">
@@ -103,10 +103,10 @@ export default function PipelineClient({
       </div>
 
       {/* Filtres */}
-      <div className="mt-9 border-y border-rule py-4">
+      <div className="mt-8 rounded-2xl border border-custom3 bg-wash p-4 md:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <input
-            className="field max-w-full py-2 text-[15px] lg:max-w-[22rem]"
+            className="field max-w-full lg:max-w-[22rem]"
             placeholder="Rechercher un nom, une réf, une réponse…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -136,7 +136,7 @@ export default function PipelineClient({
           <label className="ml-auto flex items-center gap-2">
             <span className="eyebrow">Trier par</span>
             <select
-              className="border-b border-rule bg-transparent py-1 font-mono text-[11px] uppercase tracking-[0.14em] outline-none focus:border-ink"
+              className="rounded-full border border-custom3 bg-white px-3 py-1.5 text-[13px] font-semibold outline-none transition-colors focus:border-primaire"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
             >
@@ -164,13 +164,13 @@ export default function PipelineClient({
         </div>
       ) : (
         <>
-          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+          <p className="mt-6 text-[13px] font-medium text-custom1">
             {rows.length} dossier{rows.length > 1 ? "s" : ""}
           </p>
 
           {/* Desktop */}
-          <div className="mt-3 hidden border-t border-rule md:block">
-            <div className="grid grid-cols-[1.25rem_6.5rem_minmax(0,1fr)_9rem_6.5rem_4.5rem] items-center gap-4 border-b border-rule py-2">
+          <div className="mt-3 hidden overflow-hidden rounded-2xl border border-custom3 md:block">
+            <div className="grid grid-cols-[1.25rem_6.5rem_minmax(0,1fr)_9rem_6.5rem_4.5rem] items-center gap-4 border-b border-custom3 bg-wash px-5 py-3">
               <span />
               <span className="eyebrow">Réf</span>
               <span className="eyebrow">Candidat</span>
@@ -185,29 +185,29 @@ export default function PipelineClient({
               <Link
                 key={a.id}
                 href={`/admin/candidats/${a.id}`}
-                className="group grid grid-cols-[1.25rem_6.5rem_minmax(0,1fr)_9rem_6.5rem_4.5rem] items-center gap-4 border-b border-rule py-3.5 transition-colors hover:bg-wash"
+                className="group grid grid-cols-[1.25rem_6.5rem_minmax(0,1fr)_9rem_6.5rem_4.5rem] items-center gap-4 border-b border-custom3 px-5 py-4 transition-colors last:border-b-0 hover:bg-primaire/5"
               >
                 <StatusDot status={a.status} />
-                <span className="font-mono text-[12px] tracking-[0.04em] text-muted">{a.ref}</span>
+                <span className="text-[12px] font-semibold tracking-[0.02em] text-custom2">{a.ref}</span>
                 <span className="min-w-0">
-                  <span className="block truncate text-[15px]">
+                  <span className="block truncate text-[15px] font-semibold">
                     {a.identity.firstName} {a.identity.lastName}
                     {a.score.disqualified && (
-                      <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                      <span className="ml-2 rounded-full bg-wash px-2 py-0.5 text-[11px] font-semibold text-custom2">
                         écarté
                       </span>
                     )}
                   </span>
-                  <span className="block truncate text-[13px] text-muted">
+                  <span className="block truncate text-[13px] text-custom1">
                     {a.identity.email}
                     {a.identity.city ? ` · ${a.identity.city}` : ""}
                   </span>
                 </span>
-                <span className="hidden truncate text-[13px] text-muted lg:block">
+                <span className="hidden truncate text-[13px] text-custom1 lg:block">
                   {summaryQuestion ? String(a.answers[summaryQuestion.id] ?? "—") : statusLabel(a.status)}
                 </span>
                 <Score percent={a.score.percent} disqualified={a.score.disqualified} />
-                <span className="text-right font-mono text-[12px] tabular-nums text-muted">
+                <span className="text-right text-[12px] tabular-nums text-custom2">
                   {shortDate(a.createdAt)}
                 </span>
               </Link>
@@ -215,36 +215,38 @@ export default function PipelineClient({
           </div>
 
           {/* Mobile */}
-          <ul className="mt-3 border-t border-rule md:hidden">
+          <ul className="mt-3 space-y-3 md:hidden">
             {rows.map((a) => (
               <li key={a.id}>
                 <Link
                   href={`/admin/candidats/${a.id}`}
-                  className="block border-b border-rule py-4 transition-colors active:bg-wash"
+                  className="block rounded-2xl border border-custom3 bg-white p-4 shadow-soft transition-colors active:bg-primaire/5"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[11px] tracking-[0.04em] text-muted">{a.ref}</span>
-                    <span className="font-mono text-[11px] tabular-nums text-muted">
+                    <span className="text-[11px] font-semibold tracking-[0.02em] text-custom2">{a.ref}</span>
+                    <span className="text-[11px] tabular-nums text-custom2">
                       {shortDate(a.createdAt)}
                     </span>
                   </div>
 
-                  <p className="mt-1.5 flex items-center gap-2 text-[17px] leading-tight">
+                  <p className="mt-2 flex items-center gap-2 text-[17px] font-semibold leading-tight">
                     <StatusDot status={a.status} />
                     <span className="min-w-0 truncate">
                       {a.identity.firstName} {a.identity.lastName}
                     </span>
                   </p>
 
-                  <p className="mt-1 truncate text-[13px] text-muted">
+                  <p className="mt-1 truncate text-[13px] text-custom1">
                     {summaryQuestion ? String(a.answers[summaryQuestion.id] ?? a.identity.email) : a.identity.email}
                   </p>
 
                   <div className="mt-3 flex items-center justify-between gap-3">
                     <Score percent={a.score.percent} disqualified={a.score.disqualified} />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                      {a.score.disqualified ? "Écarté" : statusLabel(a.status)}
-                    </span>
+                    {a.score.disqualified ? (
+                      <span className="pill border-custom3 bg-wash text-[12px] text-custom2">Écarté</span>
+                    ) : (
+                      <StatusPill status={a.status} />
+                    )}
                   </div>
                 </Link>
               </li>
@@ -260,7 +262,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <dt className="eyebrow">{label}</dt>
-      <dd className="display mt-0.5 text-[26px] tabular-nums leading-none">{value}</dd>
+      <dd className="display mt-1 text-[28px] tabular-nums leading-none text-primaire">{value}</dd>
     </div>
   );
 }
@@ -279,8 +281,10 @@ function Chip({
       type="button"
       onClick={onClick}
       className={clsx(
-        "border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors",
-        active ? "border-ink bg-ink text-paper" : "border-rule text-muted hover:border-ink hover:text-ink"
+        "rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+        active
+          ? "border-primaire bg-primaire text-white"
+          : "border-custom3 bg-white text-custom1 hover:border-primaire hover:text-primaire"
       )}
     >
       {children}
@@ -308,13 +312,17 @@ function Toggle({
       <span
         aria-hidden="true"
         className={clsx(
-          "flex h-4 w-4 shrink-0 items-center justify-center border transition-colors",
-          checked ? "border-ink bg-ink" : "border-rule"
+          "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors",
+          checked ? "border-primaire bg-primaire" : "border-custom3 bg-white"
         )}
       >
-        {checked && <span className="h-1.5 w-1.5 bg-paper" />}
+        {checked && (
+          <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
+            <path d="M2 6.2 4.6 8.8 10 3.4" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
       </span>
-      <span className="font-mono text-[11px] uppercase tracking-[0.14em]">{children}</span>
+      <span className="text-[13px] font-medium">{children}</span>
     </label>
   );
 }

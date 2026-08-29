@@ -56,7 +56,7 @@ export default function QuestionsSection({
     <div>
       <header className="max-w-measure">
         <h2 className="display text-[24px] leading-tight md:text-[28px]">Questionnaire</h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">
+        <p className="mt-2 text-[14px] leading-relaxed text-custom1">
           Les questions posées au candidat, dans l&apos;ordre d&apos;affichage. Chaque question porte un
           identifiant : c&apos;est lui que visent les règles de tri.
         </p>
@@ -69,10 +69,10 @@ export default function QuestionsSection({
 
           return (
             <article key={i} className="card p-4 md:p-5">
-              <div className="flex items-center justify-between gap-2 border-b border-rule2 pb-3">
-                <span className="font-mono text-[11px] tabular-nums text-muted">
+              <div className="flex items-center justify-between gap-2 border-b border-custom32 pb-3">
+                <span className="text-[11px] tabular-nums text-custom1">
                   {String(i + 1).padStart(2, "0")}
-                  <span className="ml-3 normal-case text-ink">{q.id || "identifiant à générer"}</span>
+                  <span className="ml-3 normal-case text-black">{q.id || "identifiant à générer"}</span>
                 </span>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <SquareBtn title="Monter" onClick={() => move(i, -1)} disabled={i === 0}>
@@ -120,7 +120,7 @@ export default function QuestionsSection({
                   }
                 >
                   <input
-                    className="box font-mono text-[13px]"
+                    className="box text-[13px]"
                     value={q.id}
                     onChange={(e) => patch(i, { id: e.target.value })}
                     placeholder="experience"
@@ -157,7 +157,7 @@ export default function QuestionsSection({
                     className="md:col-span-2"
                   >
                     <textarea
-                      className="box font-mono text-[13px]"
+                      className="box text-[13px]"
                       rows={Math.min(12, Math.max(4, (q.options ?? []).length + 1))}
                       value={(q.options ?? []).join("\n")}
                       onChange={(e) => patch(i, { options: e.target.value.split("\n") })}
@@ -225,7 +225,7 @@ export default function QuestionsSection({
                 ) : null}
               </div>
 
-              <div className="mt-2 border-t border-rule2 pt-1">
+              <div className="mt-2 border-t border-custom32 pt-1">
                 <Check
                   checked={Boolean(q.required)}
                   onChange={(v) => patch(i, { required: v })}

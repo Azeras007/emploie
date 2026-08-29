@@ -95,20 +95,20 @@ export default function RulesSection({
     <div>
       <header className="max-w-measure">
         <h2 className="display text-[24px] leading-tight md:text-[28px]">Tri &amp; pertinence</h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">
+        <p className="mt-2 text-[14px] leading-relaxed text-custom1">
           Chaque règle regarde une réponse et ajoute, retire ou écarte. Le score est un pourcentage des
           points possibles ; au-dessus du seuil, la candidature est signalée comme pertinente.
         </p>
       </header>
 
       {/* Rappel des quatre modes, en une phrase chacun. */}
-      <dl className="mt-6 border-t border-rule">
+      <dl className="mt-6 border-t border-custom3">
         {RULE_MODES.map((m) => (
-          <div key={m.value} className="flex flex-col gap-0.5 border-b border-rule2 py-2.5 md:flex-row md:gap-6">
-            <dt className="font-mono text-[11px] uppercase tracking-[0.14em] md:w-52 md:shrink-0">
+          <div key={m.value} className="flex flex-col gap-0.5 border-b border-custom32 py-2.5 md:flex-row md:gap-6">
+            <dt className="text-[13px] font-semibold md:w-52 md:shrink-0">
               {m.label}
             </dt>
-            <dd className="text-[13px] leading-snug text-muted">{m.help}</dd>
+            <dd className="text-[13px] leading-snug text-custom1">{m.help}</dd>
           </div>
         ))}
       </dl>
@@ -139,12 +139,12 @@ export default function RulesSection({
                   onPatch({ threshold: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })
                 }
                 aria-label="Seuil de pertinence, en pourcentage"
-                className="box w-[74px] px-2 text-center font-mono tabular-nums"
+                className="box w-[74px] px-2 text-center tabular-nums"
               />
-              <span className="font-mono text-[12px] text-muted">%</span>
+              <span className="text-[12px] text-custom1">%</span>
             </span>
           </div>
-          <p className="mt-2 text-[12px] leading-snug text-muted">
+          <p className="mt-2 text-[12px] leading-snug text-custom1">
             Une candidature au-dessus de {settings.threshold} % est marquée pertinente.
           </p>
         </div>
@@ -173,10 +173,10 @@ export default function RulesSection({
       </section>
 
       {preview ? (
-        <p className="mt-8 border-y border-rule py-3 font-mono text-[11px] uppercase tracking-[0.14em] tabular-nums">
+        <p className="mt-8 border-y border-custom3 py-3 text-[13px] font-semibold tabular-nums">
           Sur {preview.total} candidature{preview.total > 1 ? "s" : ""} : {preview.pertinents} pertinente
           {preview.pertinents > 1 ? "s" : ""} · {preview.ecartes} écartée{preview.ecartes > 1 ? "s" : ""}
-          <span className="ml-2 normal-case tracking-normal text-muted">
+          <span className="ml-2 normal-case tracking-normal text-custom1">
             (simulation avec les réglages en cours)
           </span>
         </p>
@@ -185,7 +185,7 @@ export default function RulesSection({
       {/* ---------- Les règles ---------- */}
       <div className="mt-10 flex items-baseline justify-between gap-4">
         <h3 className="display text-[18px]">Règles</h3>
-        <span className="font-mono text-[11px] tabular-nums text-muted">
+        <span className="text-[11px] tabular-nums text-custom1">
           {rules.filter((r) => r.enabled).length}/{rules.length} actives
         </span>
       </div>
@@ -201,7 +201,7 @@ export default function RulesSection({
 
           return (
             <article key={rule.id || i} className="card p-4 md:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rule2 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-custom32 pb-3">
                 <Check
                   checked={rule.enabled}
                   onChange={(v) => patchRule(i, { enabled: v })}
@@ -280,7 +280,7 @@ export default function RulesSection({
 
                 <Field label="Valeur" className="md:col-span-3">
                   {!needsValue ? (
-                    <span className="flex h-[42px] items-center border border-rule2 px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+                    <span className="flex h-[42px] items-center border border-custom32 px-3 text-[13px] font-semibold text-custom1">
                       Sans valeur
                     </span>
                   ) : isFileTarget ? (
@@ -329,7 +329,7 @@ export default function RulesSection({
                   hint={rule.mode === "exclude" ? "Sans effet ici." : undefined}
                 >
                   <input
-                    className="box font-mono tabular-nums"
+                    className="box tabular-nums"
                     type="number"
                     inputMode="numeric"
                     value={rule.points}

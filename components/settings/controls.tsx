@@ -24,9 +24,9 @@ export function Field({
     <label className={clsx("block", className)}>
       <span className="eyebrow block">{label}</span>
       <span className="mt-1.5 block">{children}</span>
-      {hint ? <span className="mt-1.5 block text-[12px] leading-snug text-muted">{hint}</span> : null}
+      {hint ? <span className="mt-1.5 block text-[12px] leading-snug text-custom1">{hint}</span> : null}
       {warning ? (
-        <span className="mt-1.5 flex items-start gap-1.5 border-l-2 border-ink pl-2 font-mono text-[10px] uppercase leading-[1.5] tracking-[0.12em]">
+        <span className="mt-1.5 flex items-start gap-1.5 border-l-2 border-primaire pl-2 text-[10px] uppercase leading-[1.5] tracking-[0.12em]">
           {warning}
         </span>
       ) : null}
@@ -58,8 +58,8 @@ export function Check({
     >
       <span
         className={clsx(
-          "grid h-[18px] w-[18px] shrink-0 place-items-center border border-ink transition-colors",
-          checked ? "bg-ink text-paper" : "bg-paper"
+          "grid h-[18px] w-[18px] shrink-0 place-items-center border border-primaire transition-colors",
+          checked ? "bg-primaire text-white" : "bg-white"
         )}
       >
         {checked ? (
@@ -69,8 +69,8 @@ export function Check({
         ) : null}
       </span>
       <span className="min-w-0">
-        <span className="block font-mono text-[11px] uppercase tracking-[0.14em]">{label}</span>
-        {hint ? <span className="mt-0.5 block text-[12px] leading-snug text-muted">{hint}</span> : null}
+        <span className="block text-[13px] font-semibold">{label}</span>
+        {hint ? <span className="mt-0.5 block text-[12px] leading-snug text-custom1">{hint}</span> : null}
       </span>
     </button>
   );
@@ -95,8 +95,8 @@ export function SquareBtn({
       disabled={disabled}
       title={title}
       aria-label={title}
-      className="grid h-11 w-11 shrink-0 place-items-center border border-rule bg-paper font-mono text-[13px]
-                 transition-colors hover:border-ink disabled:opacity-25 disabled:hover:border-rule"
+      className="grid h-11 w-11 shrink-0 place-items-center border border-custom3 bg-white text-[13px]
+                 transition-colors hover:border-primaire disabled:opacity-25 disabled:hover:border-custom3"
     >
       {children}
     </button>
@@ -130,8 +130,8 @@ export function ConfirmButton({
         onConfirm();
       }}
       className={clsx(
-        "inline-flex min-h-[44px] select-none items-center px-2 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors",
-        armed ? "text-ink underline underline-offset-4" : "text-muted hover:text-ink",
+        "inline-flex min-h-[44px] select-none items-center px-2 text-[13px] font-semibold transition-colors",
+        armed ? "text-black underline underline-offset-4" : "text-custom1 hover:text-black",
         className
       )}
     >
@@ -145,8 +145,8 @@ export function Notice({ kind, children }: { kind: "error" | "ok"; children: Rea
   return (
     <p
       className={clsx(
-        "border-l-2 py-1 pl-3 font-mono text-[11px] uppercase leading-[1.6] tracking-[0.12em]",
-        kind === "error" ? "border-ink text-ink" : "border-rule text-muted"
+        "border-l-2 py-1 pl-3 text-[11px] uppercase leading-[1.6] tracking-[0.12em]",
+        kind === "error" ? "border-primaire text-black" : "border-custom3 text-custom1"
       )}
     >
       {children}

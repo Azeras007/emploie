@@ -117,14 +117,14 @@ export default function SettingsClient({
       <header className="pt-8 md:pt-12">
         <p className="eyebrow">Administration</p>
         <h1 className="display mt-2 text-[34px] leading-[1.02] md:text-[46px]">Réglages</h1>
-        <p className="mt-3 max-w-measure text-[15px] leading-relaxed text-muted">
+        <p className="mt-3 max-w-measure text-[15px] leading-relaxed text-custom1">
           Le questionnaire, les règles qui trient les candidatures, et vos accès. Tout est modifiable
           et prend effet dès l&apos;enregistrement.
         </p>
       </header>
 
       {/* ---------- Onglets ---------- */}
-      <div className="mt-8 border-b border-rule">
+      <div className="mt-8 border-b border-custom3">
         <div role="tablist" aria-label="Sections des réglages" className="-mb-px flex gap-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => (
             <button
@@ -136,8 +136,8 @@ export default function SettingsClient({
               id={`onglet-${t.id}`}
               onClick={() => setTab(t.id)}
               className={clsx(
-                "min-h-[44px] shrink-0 whitespace-nowrap border-b-2 pb-2.5 pt-1 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors",
-                tab === t.id ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
+                "min-h-[44px] shrink-0 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[13px] font-semibold transition-colors",
+                tab === t.id ? "border-primaire text-black" : "border-transparent text-custom1 hover:text-black"
               )}
             >
               {t.label}
@@ -157,7 +157,7 @@ export default function SettingsClient({
           <div>
             <header className="max-w-measure">
               <h2 className="display text-[24px] leading-tight md:text-[28px]">Poste &amp; accueil</h2>
-              <p className="mt-2 text-[14px] leading-relaxed text-muted">
+              <p className="mt-2 text-[14px] leading-relaxed text-custom1">
                 L&apos;en-tête du questionnaire : ce que le candidat lit avant de commencer.
               </p>
             </header>
@@ -201,7 +201,7 @@ export default function SettingsClient({
                 <p className="display mt-2 text-[26px] leading-[1.05] md:text-[32px]">
                   {settings.jobTitle || "Intitulé du poste"}
                 </p>
-                <p className="mt-3 max-w-measure text-[15px] leading-relaxed text-muted">
+                <p className="mt-3 max-w-measure text-[15px] leading-relaxed text-custom1">
                   {settings.intro || "Texte d'accueil…"}
                 </p>
               </div>
@@ -231,15 +231,15 @@ export default function SettingsClient({
 
       {/* ---------- Barre d'enregistrement collante ---------- */}
       {dirty || savedFlash || error ? (
-        <div className="sticky bottom-0 z-20 -mx-5 mt-12 border-t border-rule bg-paper/95 px-5 py-3.5 backdrop-blur md:-mx-8 md:px-8">
+        <div className="sticky bottom-0 z-20 -mx-5 mt-12 border-t border-custom3 bg-white/95 px-5 py-3.5 backdrop-blur md:-mx-8 md:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               {error ? (
                 <Notice kind="error">{error}</Notice>
               ) : savedFlash && !dirty ? (
-                <p className="font-mono text-[11px] uppercase tracking-[0.14em]">Enregistré</p>
+                <p className="text-[13px] font-semibold">Enregistré</p>
               ) : (
-                <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+                <p className="text-[13px] font-semibold text-custom1">
                   Modifications non enregistrées
                 </p>
               )}

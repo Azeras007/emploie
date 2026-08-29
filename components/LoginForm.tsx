@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 export default function LoginForm({
   setup,
@@ -59,34 +60,35 @@ export default function LoginForm({
 
   return (
     <div className="rise w-full max-w-[26rem]">
-      <p className="eyebrow">{setup ? "Première mise en route" : "Espace recrutement"}</p>
+      <Logo height={34} className="mb-9" priority />
+      <p className="eyebrow text-primaire">{setup ? "Première mise en route" : "Espace recrutement"}</p>
       <h1 className="display mt-4 text-[32px] leading-[1.05] md:text-[42px]">
         {setup ? "Créez votre compte" : "Connexion"}
       </h1>
-      <p className="mt-4 text-[15px] leading-relaxed text-muted">
+      <p className="mt-4 text-[15px] leading-relaxed text-custom1">
         {setup
           ? "Un seul compte suffit : choisissez un identifiant et un mot de passe. Aucune adresse e-mail n'est demandée."
           : "Entrez votre identifiant et votre mot de passe."}
       </p>
 
       {storageProblem && (
-        <div className="mt-8 border border-ink">
-          <div className="p-4">
-            <p className="eyebrow">Configuration à terminer</p>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-primaire/30">
+          <div className="bg-primaire/5 p-4">
+            <p className="eyebrow text-primaire-hover">Configuration à terminer</p>
             <p className="mt-2 text-[14px] leading-relaxed">{storageProblem}</p>
           </div>
 
           {storageSeen && storageSeen.length > 0 && (
-            <div className="border-t border-rule bg-wash p-4">
+            <div className="border-t border-primaire/20 bg-wash p-4">
               <p className="eyebrow">Ce que le serveur reçoit</p>
               <ul className="mt-2 space-y-1">
                 {storageSeen.map((line) => (
-                  <li key={line} className="font-mono text-[11px] leading-relaxed text-muted">
+                  <li key={line} className="text-[12px] leading-relaxed text-custom1">
                     {line}
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-[12px] leading-relaxed text-muted">
+              <p className="mt-3 text-[12px] leading-relaxed text-custom2">
                 Une variable ajoutée sur Vercel n'arrive qu'au déploiement suivant : après avoir
                 relié la base, lancez un Redeploy.
               </p>
@@ -138,7 +140,7 @@ export default function LoginForm({
         )}
 
         {error && (
-          <p role="alert" className="border-l-2 border-ink pl-3 text-[14px] leading-relaxed">
+          <p role="alert" className="rounded-xl bg-primaire/10 px-4 py-3 text-[14px] leading-relaxed text-primaire-hover">
             {error}
           </p>
         )}

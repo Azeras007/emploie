@@ -131,15 +131,15 @@ export default function AccountSection({
     <div>
       <header className="max-w-measure">
         <h2 className="display text-[24px] leading-tight md:text-[28px]">Compte &amp; liens</h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">
-          Connecté en tant que <span className="font-mono text-[13px] text-ink">{username}</span>.
+        <p className="mt-2 text-[14px] leading-relaxed text-custom1">
+          Connecté en tant que <span className="text-[13px] text-black">{username}</span>.
         </p>
       </header>
 
       {/* ---------- Liens d'invitation ---------- */}
       <section className="mt-10">
         <h3 className="display text-[18px]">Liens de candidature</h3>
-        <p className="mt-1.5 max-w-measure text-[13px] leading-relaxed text-muted">
+        <p className="mt-1.5 max-w-measure text-[13px] leading-relaxed text-custom1">
           Un lien par canal de diffusion : vous saurez d&apos;où viennent les candidatures.
         </p>
 
@@ -174,22 +174,22 @@ export default function AccountSection({
           </div>
         ) : null}
 
-        <ul className="mt-6 border-t border-rule">
+        <ul className="mt-6 border-t border-custom3">
           {invites.length === 0 ? (
-            <li className="py-6 text-[13px] text-muted">Aucun lien pour le moment.</li>
+            <li className="py-6 text-[13px] text-custom1">Aucun lien pour le moment.</li>
           ) : null}
 
           {invites.map((invite) => (
-            <li key={invite.id} className="border-b border-rule2 py-4">
+            <li key={invite.id} className="border-b border-custom32 py-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <p className="truncate text-[15px]">{invite.label}</p>
-                  <p className="mt-1 break-all font-mono text-[11px] leading-snug text-muted">
+                  <p className="mt-1 break-all text-[11px] leading-snug text-custom1">
                     {origin ? linkFor(invite) : `…/candidature/${invite.token}`}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-3">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.14em] tabular-nums text-muted">
+                  <span className="text-[13px] font-semibold tabular-nums text-custom1">
                     {invite.uses} utilisation{invite.uses > 1 ? "s" : ""}
                   </span>
                   <button
