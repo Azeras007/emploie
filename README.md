@@ -79,6 +79,11 @@ Next.js 15 (App Router), TypeScript, Tailwind. Deux pilotes interchangeables pou
 démarrage selon les variables d'environnement présentes. Sessions par JWT signé dans un cookie
 `httpOnly`, mots de passe hachés avec bcrypt.
 
+Sur Vercel Blob, les documents sont déposés en **accès privé** : ils ne sortent du stockage que
+par `/api/fichiers`, qui vérifie la session administrateur ou le jeton de partage. Une URL
+publique, même imprévisible, resterait lisible à vie par quiconque la récupère — ce n'est pas
+une propriété acceptable pour un CV.
+
 Les documents sont envoyés un par un avant l'envoi du formulaire : ça contourne la limite de
 4,5 Mo par requête sur Vercel et donne un retour immédiat au candidat. Chaque fichier revient
 signé (HMAC), et l'envoi final refuse tout document que le serveur n'a pas lui-même émis.

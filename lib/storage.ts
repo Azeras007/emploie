@@ -7,17 +7,21 @@ export const FILE_DRIVER: "blob" | "local" = BLOB_TOKEN ? "blob" : "local";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), ".data", "uploads");
 
-/** Maps a stored key to its bytes, wherever they live. */
+/**
+ * Les CV sont déposés en accès privé : ils ne sont lisibles qu'à travers
+ * /api/fichiers, qui vérifie la session ou le jeton de partage. Une URL publique,
+ * même imprévisible, resterait ouverte à quiconque la récupère.
+ */
 export async function putFile(key: string, data: Buffer, mime: string): Promise<string> {
   if (FILE_DRIVER === "blob") {
     const { put } = await import("@vercel/blob");
     const res = await put(key, data, {
-      access: "public",
+      access: "private",
       contentType: mime,
       token: BLOB_TOKEN,
       addRandomSuffix: false,
     });
-    return res.url;
+    return res.pathname;
   }
   const dest = path.join(UPLOAD_DIR, key);
   await fs.mkdir(path.dirname(dest), { recursive: true });
@@ -25,24 +29,34 @@ export async function putFile(key: string, data: Buffer, mime: string): Promise<
   return key;
 }
 
-export async function readFile(keyOrUrl: string): Promise<Buffer> {
-  if (/^https?:\/\//.test(keyOrUrl)) {
-    const res = await fetch(keyOrUrl, { cache: "no-store" });
-    if (!res.ok) throw new Error(`Fichier introuvable (${res.status})`);
+export async function readFile(key: string): Promise<Buffer> {
+  if (FILE_DRIVER === "blob") {
+    const { get } = await import("@vercel/blob");
+    const res = await get(key, { access: "private", token: BLOB_TOKEN });
+    if (!res?.stream) throw new Error("Document introuvable dans le stockage.");
+    return Buffer.from(await new Response(res.stream).arrayBuffer());
+  }
+
+  // Documents déposés avant le passage au stockage privé.
+  if (/^https?:\/\//.test(key)) {
+    const res = await fetch(key, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Document inaccessible (${res.status}).`);
     return Buffer.from(await res.arrayBuffer());
   }
-  return fs.readFile(path.join(UPLOAD_DIR, keyOrUrl));
+
+  return fs.readFile(path.join(UPLOAD_DIR, key));
 }
 
-export async function deleteFile(keyOrUrl: string): Promise<void> {
+export async function deleteFile(key: string): Promise<void> {
   try {
-    if (/^https?:\/\//.test(keyOrUrl)) {
+    if (FILE_DRIVER === "blob") {
       const { del } = await import("@vercel/blob");
-      await del(keyOrUrl, { token: BLOB_TOKEN });
+      await del(key, { token: BLOB_TOKEN });
       return;
     }
-    await fs.unlink(path.join(UPLOAD_DIR, keyOrUrl));
+    if (/^https?:\/\//.test(key)) return;
+    await fs.unlink(path.join(UPLOAD_DIR, key));
   } catch {
-    /* already gone */
+    /* déjà supprimé */
   }
 }
