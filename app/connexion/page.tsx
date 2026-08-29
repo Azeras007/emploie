@@ -15,7 +15,11 @@ export default async function ConnexionPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[900px] flex-col justify-center px-5 py-16 md:px-8">
-      <LoginForm setup={setup} storageProblem={storage.ok ? undefined : storage.problem} />
+      <LoginForm
+        setup={setup}
+        storageProblem={storage.ok ? undefined : storage.problem}
+        storageSeen={storage.ok ? undefined : storage.seen}
+      />
     </main>
   );
 }

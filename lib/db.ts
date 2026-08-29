@@ -59,6 +59,29 @@ export interface StorageStatus {
   ok: boolean;
   driver: "postgres" | "file";
   problem?: string;
+  /** Ce que le serveur voit vraiment — noms de variables uniquement, jamais de valeurs. */
+  seen?: string[];
+}
+
+/** Inventaire des variables de configuration, sans jamais divulguer leur contenu. */
+export function envReport(): string[] {
+  const lines: string[] = [];
+  const set = PG_ENV_NAMES.filter((n) => (process.env[n] ?? "").trim() !== "");
+  if (set.length > 0) lines.push(`Base de données : ${set.join(", ")} présente`);
+  else if (PG_BLANK_NAMES.length > 0) lines.push(`Base de données : ${PG_BLANK_NAMES.join(", ")} présente mais vide`);
+  else lines.push("Base de données : aucune variable reçue (ni DATABASE_URL, ni POSTGRES_URL, ni STORAGE_URL)");
+
+  lines.push(
+    (process.env.BLOB_READ_WRITE_TOKEN ?? "").trim() !== ""
+      ? "Documents : BLOB_READ_WRITE_TOKEN présent"
+      : "Documents : BLOB_READ_WRITE_TOKEN absent"
+  );
+  lines.push(
+    (process.env.AUTH_SECRET ?? "").trim() !== ""
+      ? "Sessions : AUTH_SECRET présent"
+      : "Sessions : AUTH_SECRET absent"
+  );
+  return lines;
 }
 
 /** Vérifie que les données peuvent réellement être écrites, sans rien enregistrer. */
@@ -72,6 +95,7 @@ export async function storageStatus(): Promise<StorageStatus> {
       return {
         ok: false,
         driver: "postgres",
+        seen: envReport(),
         problem:
           "La base de données ne répond pas : " +
           (err instanceof Error ? err.message : String(err)) +
@@ -84,6 +108,7 @@ export async function storageStatus(): Promise<StorageStatus> {
     return {
       ok: false,
       driver: "file",
+      seen: envReport(),
       problem:
         `La variable ${PG_BLANK_NAMES.join(" et ")} existe mais est vide, donc aucune base n'est ` +
         "reliée. Supprimez-la dans Settings → Environment Variables, puis reliez la base " +
@@ -95,6 +120,7 @@ export async function storageStatus(): Promise<StorageStatus> {
     return {
       ok: false,
       driver: "file",
+      seen: envReport(),
       problem:
         "Aucune base de données n'est reliée. Ici le disque est en lecture seule : ni les comptes " +
         "ni les candidatures ne peuvent être enregistrés. Dans Vercel, ouvrez Storage → " +
@@ -113,6 +139,7 @@ export async function storageStatus(): Promise<StorageStatus> {
     return {
       ok: false,
       driver: "file",
+      seen: envReport(),
       problem: `Impossible d'écrire dans ${DATA_DIR}. Vérifiez les droits sur ce dossier.`,
     };
   }

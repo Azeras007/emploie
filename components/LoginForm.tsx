@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 export default function LoginForm({
   setup,
   storageProblem,
+  storageSeen,
 }: {
   setup: boolean;
   storageProblem?: string;
+  storageSeen?: string[];
 }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -68,9 +70,28 @@ export default function LoginForm({
       </p>
 
       {storageProblem && (
-        <div className="mt-8 border border-ink p-4">
-          <p className="eyebrow">Configuration à terminer</p>
-          <p className="mt-2 text-[14px] leading-relaxed">{storageProblem}</p>
+        <div className="mt-8 border border-ink">
+          <div className="p-4">
+            <p className="eyebrow">Configuration à terminer</p>
+            <p className="mt-2 text-[14px] leading-relaxed">{storageProblem}</p>
+          </div>
+
+          {storageSeen && storageSeen.length > 0 && (
+            <div className="border-t border-rule bg-wash p-4">
+              <p className="eyebrow">Ce que le serveur reçoit</p>
+              <ul className="mt-2 space-y-1">
+                {storageSeen.map((line) => (
+                  <li key={line} className="font-mono text-[11px] leading-relaxed text-muted">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[12px] leading-relaxed text-muted">
+                Une variable ajoutée sur Vercel n'arrive qu'au déploiement suivant : après avoir
+                relié la base, lancez un Redeploy.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
