@@ -2,11 +2,11 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import { DEFAULT_SETTINGS } from "./defaults";
+import * as pg from "./pgStore";
 import { filesReport } from "./storage";
 import type { Applicant, Invite, Settings, User } from "./types";
 
-type Collection = "applicants" | "invites" | "users" | "meta";
-
+/** Forme du fichier JSON de développement. */
 interface Shape {
   applicants: Record<string, Applicant>;
   invites: Record<string, Invite>;
@@ -115,6 +115,10 @@ export async function storageStatus(): Promise<StorageStatus> {
     try {
       const pool = await getPool();
       await pool.query("select 1");
+      const schemaProblem = await pg.checkSchema(pool);
+      if (schemaProblem) {
+        return { ok: false, driver: "postgres", seen: envReport(), problem: schemaProblem };
+      }
       return { ok: true, driver: "postgres" };
     } catch (err) {
       return {
@@ -236,160 +240,127 @@ async function getPool(): Promise<PgPool> {
           : { rejectUnauthorized: process.env.PGSSL_NO_VERIFY !== "1" },
         max: 3,
       });
-      await pool.query(
-        `create table if not exists documents (
-           collection text not null,
-           id text not null,
-           doc jsonb not null,
-           primary key (collection, id)
-         )`
-      );
+      // Aucune table n'est créée ici : le schéma appartient au dépôt Valeur
+      // Ajoutée et vit dans sa migration `20260829180000_add_recruitment`.
+      // Une application qui crée ses tables toute seule finit par diverger du
+      // schéma que Prisma croit gérer.
       return pool;
     })();
   }
   return poolPromise;
 }
 
-async function pgAll<T>(collection: Collection): Promise<T[]> {
-  const pool = await getPool();
-  const { rows } = await pool.query<{ doc: T }>(
-    "select doc from documents where collection = $1",
-    [collection]
-  );
-  return rows.map((r) => r.doc);
-}
-
-async function pgGet<T>(collection: Collection, id: string): Promise<T | null> {
-  const pool = await getPool();
-  const { rows } = await pool.query<{ doc: T }>(
-    "select doc from documents where collection = $1 and id = $2",
-    [collection, id]
-  );
-  return rows[0]?.doc ?? null;
-}
-
-async function pgPut<T>(collection: Collection, id: string, doc: T): Promise<T> {
-  const pool = await getPool();
-  await pool.query(
-    `insert into documents (collection, id, doc) values ($1, $2, $3)
-     on conflict (collection, id) do update set doc = excluded.doc`,
-    [collection, id, JSON.stringify(doc)]
-  );
-  return doc;
-}
-
-async function pgDelete(collection: Collection, id: string): Promise<void> {
-  const pool = await getPool();
-  await pool.query("delete from documents where collection = $1 and id = $2", [collection, id]);
-}
-
 /* ------------------------------------------------------------------ *
- * Unified API
+ * API unifiée
+ *
+ * Deux implémentations derrière la même surface : les tables relationnelles de
+ * la base Valeur Ajoutée en production, un fichier JSON en développement.
  * ------------------------------------------------------------------ */
 
-async function all<K extends Exclude<Collection, "meta">>(
-  collection: K
-): Promise<Shape[K][string][]> {
-  if (DB_DRIVER === "postgres") return pgAll(collection);
-  const db = await readFileDb();
-  return Object.values(db[collection]) as Shape[K][string][];
+/** Position et libellé des questions, recopiés avec chaque réponse. */
+async function questionMeta(): Promise<Map<string, { label: string; position: number }>> {
+  const settings = await getSettings();
+  return new Map(
+    settings.questions.map((q, i) => [q.id, { label: q.label, position: i + 1 }])
+  );
 }
 
-async function get<K extends Exclude<Collection, "meta">>(
-  collection: K,
-  id: string
-): Promise<Shape[K][string] | null> {
-  if (DB_DRIVER === "postgres") return pgGet(collection, id);
-  const db = await readFileDb();
-  return (db[collection][id] as Shape[K][string]) ?? null;
-}
-
-async function put<K extends Exclude<Collection, "meta">>(
-  collection: K,
-  id: string,
-  doc: Shape[K][string]
-): Promise<Shape[K][string]> {
-  if (DB_DRIVER === "postgres") return pgPut(collection, id, doc);
-  await mutateFileDb((db) => {
-    (db[collection] as Record<string, unknown>)[id] = doc;
-  });
-  return doc;
-}
-
-async function remove(collection: Exclude<Collection, "meta">, id: string): Promise<void> {
-  if (DB_DRIVER === "postgres") return pgDelete(collection, id);
-  await mutateFileDb((db) => {
-    delete (db[collection] as Record<string, unknown>)[id];
-  });
-}
-
-/* ---- applicants ---- */
+/* ---- candidatures ---- */
 
 export async function listApplicants(): Promise<Applicant[]> {
-  const rows = await all("applicants");
-  return rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  if (DB_DRIVER === "postgres") return pg.listApplicants(await getPool());
+  const db = await readFileDb();
+  return Object.values(db.applicants).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
 export async function getApplicant(id: string): Promise<Applicant | null> {
-  return get("applicants", id);
+  if (DB_DRIVER === "postgres") return pg.getApplicant(await getPool(), id);
+  const db = await readFileDb();
+  return db.applicants[id] ?? null;
 }
 
 export async function findApplicantByShareToken(token: string): Promise<Applicant | null> {
+  if (DB_DRIVER === "postgres") return pg.findApplicantByShareToken(await getPool(), token);
   const rows = await listApplicants();
   return rows.find((a) => a.shareToken === token) ?? null;
 }
 
 export async function saveApplicant(applicant: Applicant): Promise<Applicant> {
-  return put("applicants", applicant.id, applicant);
+  if (DB_DRIVER === "postgres") {
+    return pg.saveApplicant(await getPool(), applicant, await questionMeta());
+  }
+  await mutateFileDb((db) => {
+    db.applicants[applicant.id] = applicant;
+  });
+  return applicant;
 }
 
 export async function deleteApplicant(id: string): Promise<void> {
-  return remove("applicants", id);
+  if (DB_DRIVER === "postgres") return pg.deleteApplicant(await getPool(), id);
+  await mutateFileDb((db) => {
+    delete db.applicants[id];
+  });
 }
 
-/* ---- invites ---- */
+/* ---- liens d'invitation ---- */
 
 export async function listInvites(): Promise<Invite[]> {
-  const rows = await all("invites");
-  return rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  if (DB_DRIVER === "postgres") return pg.listInvites(await getPool());
+  const db = await readFileDb();
+  return Object.values(db.invites).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
 export async function getInviteByToken(token: string): Promise<Invite | null> {
-  const rows = await all("invites");
+  if (DB_DRIVER === "postgres") return pg.getInviteByToken(await getPool(), token);
+  const rows = await listInvites();
   return rows.find((i) => i.token === token) ?? null;
 }
 
 export async function saveInvite(invite: Invite): Promise<Invite> {
-  return put("invites", invite.id, invite);
+  if (DB_DRIVER === "postgres") return pg.saveInvite(await getPool(), invite);
+  await mutateFileDb((db) => {
+    db.invites[invite.id] = invite;
+  });
+  return invite;
 }
 
 export async function deleteInvite(id: string): Promise<void> {
-  return remove("invites", id);
+  if (DB_DRIVER === "postgres") return pg.deleteInvite(await getPool(), id);
+  await mutateFileDb((db) => {
+    delete db.invites[id];
+  });
 }
 
-/* ---- users ---- */
+/* ---- comptes ---- */
 
 export async function listUsers(): Promise<User[]> {
-  return all("users");
+  if (DB_DRIVER === "postgres") return pg.listUsers(await getPool());
+  const db = await readFileDb();
+  return Object.values(db.users);
 }
 
 export async function findUser(username: string): Promise<User | null> {
-  const rows = await all("users");
+  if (DB_DRIVER === "postgres") return pg.findUser(await getPool(), username);
+  const rows = await listUsers();
   const needle = username.trim().toLowerCase();
   return rows.find((u) => u.username.toLowerCase() === needle) ?? null;
 }
 
 export async function saveUser(user: User): Promise<User> {
-  return put("users", user.id, user);
+  if (DB_DRIVER === "postgres") return pg.saveUser(await getPool(), user);
+  await mutateFileDb((db) => {
+    db.users[user.id] = user;
+  });
+  return user;
 }
 
-/* ---- settings ---- */
+/* ---- réglages ---- */
 
 export async function getSettings(): Promise<Settings> {
   let stored: Settings | null = null;
   try {
     if (DB_DRIVER === "postgres") {
-      stored = await pgGet<Settings>("meta", "settings");
+      stored = await pg.getSettings(await getPool());
     } else {
       const db = await readFileDb();
       stored = (db.meta.settings as Settings) ?? null;
@@ -409,7 +380,7 @@ export async function getSettings(): Promise<Settings> {
 
 export async function saveSettings(settings: Settings): Promise<Settings> {
   if (DB_DRIVER === "postgres") {
-    await pgPut("meta", "settings", settings);
+    await pg.saveSettings(await getPool(), settings);
   } else {
     await mutateFileDb((db) => {
       db.meta.settings = settings;

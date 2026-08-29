@@ -131,11 +131,55 @@ Les valeurs sont regroupées en tête de `app/globals.css` — les changer là s
 l'identité de toute l'application. Le logotype vit dans `public/logos/LOGO-TEXTE.jpg` et
 s'insère via le composant `components/Logo.tsx`.
 
+## La base de données
+
+Les candidatures vivent dans la **base Valeur Ajoutée**, pas dans une base séparée. Le schéma
+appartient au dépôt du site principal, dans la migration
+`prisma/migrations/20260829180000_add_recruitment/` :
+
+| Table | Contenu |
+|---|---|
+| `JobApplication` | Identité, statut, notes, référence, jetons de provenance et de partage |
+| `JobApplicationAnswer` | Une ligne par réponse, avec le libellé de la question recopié |
+| `JobApplicationDocument` | CV, lettre et pièces jointes — référence vers Vercel Blob |
+| `JobInviteLink` | Liens traçables et leur mention « imprimé » |
+| `Recruiter` | Le compte du back-office |
+| `RecruitmentSetting` | Questionnaire, règles de tri, seuil, domaine public |
+
+Les réponses sont éclatées en lignes plutôt que rangées en JSON : elles deviennent
+interrogeables directement en SQL, sans passer par l'application.
+
+```sql
+select a."questionLabel", count(*)
+  from "JobApplicationAnswer" a
+ where a."valueText" = 'Immédiatement'
+ group by 1;
+```
+
+Le libellé de la question est **recopié à l'enregistrement**. Le questionnaire reste donc
+modifiable sans rendre illisibles les candidatures déjà reçues.
+
+### Appliquer la migration
+
+L'historique Prisma du site remonte à une époque SQLite : `prisma migrate deploy` ne peut pas
+le rejouer. La migration s'applique donc directement, et elle est **rejouable** — chaque objet
+n'est créé que s'il n'existe pas.
+
+```bash
+psql "$DATABASE_URL" -f prisma/migrations/20260829180000_add_recruitment/migration.sql
+```
+
+Elle ne fait que créer six tables : rien d'existant n'est modifié ni supprimé.
+
+Si la migration n'a pas été appliquée, ou si le schéma dérive, l'application le dit à la
+connexion en nommant la table ou la colonne manquante — plutôt que d'échouer à la première
+candidature.
+
 ## Sous le capot
 
 Next.js 15 (App Router), TypeScript, Tailwind. Deux pilotes interchangeables pour la base
-(PostgreSQL ou fichier JSON) et pour les fichiers (Vercel Blob ou disque local), choisis au
-démarrage selon les variables d'environnement présentes. Sessions par JWT signé dans un cookie
+(les tables relationnelles ci-dessus, ou un fichier JSON en développement) et pour les fichiers
+(Vercel Blob ou disque local), choisis au démarrage selon les variables d'environnement. Sessions par JWT signé dans un cookie
 `httpOnly`, mots de passe hachés avec bcrypt.
 
 Sur Vercel Blob, les documents sont déposés en **accès privé** : ils ne sortent du stockage que
