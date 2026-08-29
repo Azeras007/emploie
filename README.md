@@ -68,7 +68,40 @@ d'un seul tenant, il reste lisible jusqu'à environ 10 % de sa surface occultée
 souvent cités valent pour des altérations dispersées. Comptez 6 cm de côté au minimum sur
 une vitrine.
 
+## Mettre en ligne sur le Mac Mini
+
+Cette application **doit tourner sur la même machine que le site** : elle écrit dans la base
+Valeur Ajoutée, dont `DATABASE_URL` pointe sur `localhost`. Un hébergement distant ne pourrait
+pas l'atteindre.
+
+```bash
+git clone https://github.com/Azeras007/emploie.git ~/valeur-ajoutee-recrutement
+cd ~/valeur-ajoutee-recrutement
+npm ci && npm run build
+pm2 start ecosystem.config.cjs && pm2 save
+```
+
+Le `.env` de la machine doit contenir :
+
+```bash
+DATABASE_URL="postgresql://…@localhost:5432/valeur_ajoutee"   # la même que le site
+AUTH_SECRET="…"                                               # openssl rand -base64 32
+BLOB_READ_WRITE_TOKEN="…"                                     # stockage des CV
+```
+
+Puis, dans le `.env` **du site principal**, pour que `/candidature` soit servi :
+
+```bash
+RECRUTEMENT_URL=http://127.0.0.1:3210
+```
+
+Les tables sont créées automatiquement au déploiement du site (`deploy.sh` lance
+`prisma db push`) : rien à faire côté base.
+
 ## Mettre en ligne sur Vercel
+
+Possible uniquement avec une base accessible depuis Internet (Neon, Supabase) — donc pas la
+base du Mac Mini.
 
 1. Importez ce dépôt dans Vercel.
 2. **Storage → Marketplace Database Providers → Neon** : créez une base Postgres et reliez-la au
