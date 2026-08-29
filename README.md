@@ -39,6 +39,11 @@ La première visite sur `/admin` propose de créer le compte administrateur. Il 
 2. **Storage → Marketplace Database Providers → Neon** : créez une base Postgres et reliez-la au
    projet. Neon injecte `DATABASE_URL`. La table est créée toute seule au premier accès.
    Supabase fait aussi l'affaire : n'importe quelle URL PostgreSQL convient.
+
+   Ne créez pas `DATABASE_URL` à la main avant cette étape : Vercel refuse alors de la créer
+   (« already has an existing environment variable »), et une variable vide ne relie rien.
+   Si c'est déjà fait, supprimez-la puis reliez la base. L'app lit aussi `POSTGRES_URL`,
+   `STORAGE_URL` et `NEON_DATABASE_URL`, au cas où vous choisiriez un préfixe personnalisé.
 3. **Storage → Blob** : créez un magasin. Vercel injecte `BLOB_READ_WRITE_TOKEN`.
 4. **Settings → Environment Variables** : ajoutez `AUTH_SECRET`, généré par
    `openssl rand -base64 32`. Sans lui, l'espace admin refuse de démarrer — c'est voulu :

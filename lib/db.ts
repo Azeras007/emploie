@@ -15,11 +15,32 @@ interface Shape {
 
 const EMPTY: Shape = { applicants: {}, invites: {}, users: {}, meta: {} };
 
-const PG_URL =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_PRISMA_URL ||
-  "";
+/** Noms de variables utilisés par Vercel, Neon et Supabase, par ordre de préférence. */
+const PG_ENV_NAMES = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_PRISMA_URL",
+  "POSTGRES_URL_NON_POOLING",
+  "DATABASE_URL_UNPOOLED",
+  "STORAGE_URL",
+  "NEON_DATABASE_URL",
+] as const;
+
+function findPgUrl(): { url: string; blankNames: string[] } {
+  const blankNames: string[] = [];
+  for (const name of PG_ENV_NAMES) {
+    const raw = process.env[name];
+    if (raw === undefined) continue;
+    const value = raw.trim();
+    // Une variable présente mais vide est un piège : elle empêche Vercel d'en créer
+    // une bonne, sans pour autant relier quoi que ce soit.
+    if (value === "") blankNames.push(name);
+    else return { url: value, blankNames };
+  }
+  return { url: "", blankNames };
+}
+
+const { url: PG_URL, blankNames: PG_BLANK_NAMES } = findPgUrl();
 
 export const DB_DRIVER: "postgres" | "file" = PG_URL ? "postgres" : "file";
 
@@ -57,6 +78,17 @@ export async function storageStatus(): Promise<StorageStatus> {
           ". Vérifiez DATABASE_URL.",
       };
     }
+  }
+
+  if (PG_BLANK_NAMES.length > 0) {
+    return {
+      ok: false,
+      driver: "file",
+      problem:
+        `La variable ${PG_BLANK_NAMES.join(" et ")} existe mais est vide, donc aucune base n'est ` +
+        "reliée. Supprimez-la dans Settings → Environment Variables, puis reliez la base " +
+        "(Storage → Neon → Connect Project) : Vercel la recréera avec la bonne valeur.",
+    };
   }
 
   if (IS_SERVERLESS) {
