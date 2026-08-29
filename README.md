@@ -36,8 +36,9 @@ La première visite sur `/admin` propose de créer le compte administrateur. Il 
 ## Mettre en ligne sur Vercel
 
 1. Importez ce dépôt dans Vercel.
-2. **Storage → Postgres** : créez une base et reliez-la au projet. Vercel injecte `POSTGRES_URL`.
-   La table est créée toute seule au premier accès.
+2. **Storage → Marketplace Database Providers → Neon** : créez une base Postgres et reliez-la au
+   projet. Neon injecte `DATABASE_URL`. La table est créée toute seule au premier accès.
+   Supabase fait aussi l'affaire : n'importe quelle URL PostgreSQL convient.
 3. **Storage → Blob** : créez un magasin. Vercel injecte `BLOB_READ_WRITE_TOKEN`.
 4. **Settings → Environment Variables** : ajoutez `AUTH_SECRET`, généré par
    `openssl rand -base64 32`. Sans lui, l'espace admin refuse de démarrer — c'est voulu :

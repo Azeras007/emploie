@@ -65,8 +65,9 @@ export async function storageStatus(): Promise<StorageStatus> {
       driver: "file",
       problem:
         "Aucune base de données n'est reliée. Ici le disque est en lecture seule : ni les comptes " +
-        "ni les candidatures ne peuvent être enregistrés. Dans Vercel, ouvrez Storage → Postgres, " +
-        "reliez une base au projet, puis redéployez.",
+        "ni les candidatures ne peuvent être enregistrés. Dans Vercel, ouvrez Storage → " +
+        "Marketplace Database Providers → Neon, créez une base Postgres et reliez-la au projet, " +
+        "puis redéployez.",
     };
   }
 
