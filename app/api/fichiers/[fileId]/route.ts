@@ -99,7 +99,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ fileId: string 
 
   let bytes: Buffer;
   try {
-    bytes = await readFile(file.key);
+    bytes = await readFile(file.key, file.access);
   } catch {
     // Entrée en base sans octets derrière : on reste sur un 404 discret.
     return notFound();

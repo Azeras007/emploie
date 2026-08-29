@@ -323,7 +323,7 @@ export async function renderPreview(file: StoredFile): Promise<PreviewPayload> {
 
     if (file.size > PREVIEW_MAX_BYTES) return unsupported(TOO_BIG);
 
-    const buffer = await readFile(file.key);
+    const buffer = await readFile(file.key, file.access);
     if (buffer.byteLength > PREVIEW_MAX_BYTES) return unsupported(TOO_BIG);
 
     /* ---- Word (.docx) ---- */

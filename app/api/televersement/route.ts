@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { putFile } from "@/lib/storage";
+import { putFile, StorageWriteError, type BlobAccess } from "@/lib/storage";
 import { extOf, isAccepted, formatFor } from "@/lib/mime";
 import { uid } from "@/lib/ids";
 import { signFile } from "@/lib/signing";
@@ -51,11 +51,22 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await blob.arrayBuffer());
 
   let storedKey: string;
+  let storedAccess: BlobAccess | undefined;
   try {
-    storedKey = await putFile(key, buffer, formatFor(blob.name, blob.type).mime);
+    const stored = await putFile(key, buffer, formatFor(blob.name, blob.type).mime);
+    storedKey = stored.key;
+    storedAccess = stored.access;
   } catch (err) {
     console.error("Échec du stockage du fichier", err);
-    return NextResponse.json({ error: "L'envoi a échoué. Réessayez." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          err instanceof StorageWriteError
+            ? err.message
+            : `L'envoi a échoué : ${err instanceof Error ? err.message : String(err)}`,
+      },
+      { status: 500 }
+    );
   }
 
   const file: StoredFile = {
@@ -66,6 +77,7 @@ export async function POST(req: Request) {
     size: blob.size,
     key: storedKey,
     uploadedAt: now.toISOString(),
+    ...(storedAccess ? { access: storedAccess } : {}),
   };
 
   return NextResponse.json({ file, signature: signFile(file) });

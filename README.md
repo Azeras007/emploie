@@ -94,6 +94,12 @@ par `/api/fichiers`, qui vérifie la session administrateur ou le jeton de parta
 publique, même imprévisible, resterait lisible à vie par quiconque la récupère — ce n'est pas
 une propriété acceptable pour un CV.
 
+Si le magasin refuse le mode privé, le dépôt bascule en public plutôt que d'échouer, et le mode
+retenu est enregistré avec le document. L'URL publique n'est jamais transmise au navigateur —
+l'aperçu et le téléchargement passent toujours par la route vérifiée — mais quiconque
+l'obtiendrait par un autre biais pourrait lire le fichier. Les journaux du déploiement notent
+chaque bascule.
+
 Les documents sont envoyés un par un avant l'envoi du formulaire : ça contourne la limite de
 4,5 Mo par requête sur Vercel et donne un retour immédiat au candidat. Chaque fichier revient
 signé (HMAC), et l'envoi final refuse tout document que le serveur n'a pas lui-même émis.
