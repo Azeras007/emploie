@@ -11,19 +11,28 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), ".data", "
 
 const BLOB_TOKEN_SUFFIX = "BLOB_READ_WRITE_TOKEN";
 
-function findBlobToken(): { token: string; name: string } {
-  const exact = (process.env[BLOB_TOKEN_SUFFIX] ?? "").trim();
-  if (exact !== "") return { token: exact, name: BLOB_TOKEN_SUFFIX };
+function findBlobToken(): { token: string; name: string; blankNames: string[] } {
+  const blankNames: string[] = [];
+  const candidates = [
+    BLOB_TOKEN_SUFFIX,
+    ...Object.keys(process.env)
+      .filter((name) => name !== BLOB_TOKEN_SUFFIX && name.endsWith(`_${BLOB_TOKEN_SUFFIX}`))
+      .sort(),
+  ];
 
-  for (const name of Object.keys(process.env).sort()) {
-    if (!name.endsWith(`_${BLOB_TOKEN_SUFFIX}`)) continue;
-    const value = (process.env[name] ?? "").trim();
-    if (value !== "") return { token: value, name };
+  for (const name of candidates) {
+    const raw = process.env[name];
+    if (raw === undefined) continue;
+    const value = raw.trim();
+    // Une variable présente mais vide empêche Vercel d'injecter la vraie :
+    // c'est un cas distinct de l'absence, et il se corrige autrement.
+    if (value === "") blankNames.push(name);
+    else return { token: value, name, blankNames };
   }
-  return { token: "", name: "" };
+  return { token: "", name: "", blankNames };
 }
 
-const { token: BLOB_TOKEN, name: BLOB_TOKEN_NAME } = findBlobToken();
+const { token: BLOB_TOKEN, name: BLOB_TOKEN_NAME, blankNames: BLOB_BLANK_NAMES } = findBlobToken();
 
 export const FILE_DRIVER: "blob" | "local" = BLOB_TOKEN ? "blob" : "local";
 export const BLOB_TOKEN_VAR = BLOB_TOKEN_NAME;
@@ -37,6 +46,16 @@ const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCT
  */
 export function filesProblem(): string | null {
   if (FILE_DRIVER === "blob") return null;
+
+  if (BLOB_BLANK_NAMES.length > 0) {
+    return (
+      `La variable ${BLOB_BLANK_NAMES.join(" et ")} existe mais est vide : les CV ne peuvent pas ` +
+      "être reçus, et sa présence empêche Vercel d'injecter le vrai jeton. Supprimez-la dans " +
+      "Settings → Environment Variables, puis reconnectez le magasin (Storage → votre Blob → " +
+      "Projects → Connect Project) et redéployez."
+    );
+  }
+
   if (IS_SERVERLESS) {
     return (
       "Aucun stockage de documents n'est relié : le disque est en lecture seule, les CV ne " +
@@ -49,6 +68,8 @@ export function filesProblem(): string | null {
 
 export function filesReport(): string {
   if (FILE_DRIVER === "blob") return `Documents : ${BLOB_TOKEN_NAME} utilisé`;
+  if (BLOB_BLANK_NAMES.length > 0)
+    return `Documents : ${BLOB_BLANK_NAMES.join(", ")} présent mais vide`;
   if (IS_SERVERLESS)
     return "Documents : aucun jeton reçu (aucun nom finissant par BLOB_READ_WRITE_TOKEN)";
   return `Documents : disque local (${UPLOAD_DIR})`;
