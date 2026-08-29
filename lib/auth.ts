@@ -7,6 +7,16 @@ import { uid } from "./ids";
 import type { User } from "./types";
 
 export const SESSION_COOKIE = "emploie_session";
+
+/** Vrai quand le secret de signature des sessions est configuré. */
+export function isSecretConfigured(): boolean {
+  return Boolean(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET);
+}
+
+export const MISSING_SECRET_MESSAGE =
+  "Configuration incomplète : la variable d'environnement AUTH_SECRET est absente. " +
+  "Ajoutez-la (openssl rand -base64 32) puis redéployez.";
+
 const MAX_AGE = 60 * 60 * 24 * 7;
 
 function secret(): Uint8Array {

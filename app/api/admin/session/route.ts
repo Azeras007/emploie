@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authenticate, endSession, startSession } from "@/lib/auth";
+import { authenticate, endSession, startSession, isSecretConfigured, MISSING_SECRET_MESSAGE } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -10,6 +10,10 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === "production" && !isSecretConfigured()) {
+    return NextResponse.json({ error: MISSING_SECRET_MESSAGE }, { status: 503 });
+  }
+
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Identifiants incomplets." }, { status: 400 });

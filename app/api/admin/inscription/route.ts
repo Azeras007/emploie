@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAdmin, hasAdmin, startSession } from "@/lib/auth";
+import { createAdmin, hasAdmin, startSession, isSecretConfigured, MISSING_SECRET_MESSAGE } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -15,6 +15,10 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === "production" && !isSecretConfigured()) {
+    return NextResponse.json({ error: MISSING_SECRET_MESSAGE }, { status: 503 });
+  }
+
   if (await hasAdmin()) {
     return NextResponse.json({ error: "Un compte existe déjà." }, { status: 409 });
   }
