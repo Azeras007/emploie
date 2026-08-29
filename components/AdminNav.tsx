@@ -14,11 +14,13 @@ export default function AdminNav({
   brand,
   ephemeral,
   problem,
+  seen,
 }: {
   username: string;
   brand: string;
   ephemeral?: boolean;
   problem?: string;
+  seen?: string[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -35,9 +37,18 @@ export default function AdminNav({
   return (
     <>
       {problem ? (
-        <p className="border-b border-ink bg-ink px-5 py-2 text-center text-[12px] leading-relaxed text-paper md:px-8">
-          {problem}
-        </p>
+        <div className="border-b border-ink bg-ink px-5 py-2.5 md:px-8">
+          <p className="mx-auto max-w-[1180px] text-[12px] leading-relaxed text-paper">{problem}</p>
+          {seen && seen.length > 0 && (
+            <ul className="mx-auto mt-1.5 flex max-w-[1180px] flex-wrap gap-x-5 gap-y-0.5">
+              {seen.map((line) => (
+                <li key={line} className="font-mono text-[10px] text-paper/60">
+                  {line}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       ) : ephemeral ? (
         <p className="border-b border-rule bg-wash px-5 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted md:px-8">
           Stockage local temporaire — ajoutez DATABASE_URL pour conserver les dossiers
