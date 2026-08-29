@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0b0b0c;
+  --paper: #ffffff;
+  --rule: #e4e4e4;
+  --rule-soft: #f0f0f0;
+  --muted: #6e6e73;
+  --wash: #f6f6f6;
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  /* iOS zooms in on focus below 16px. */
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-muted;
+  }
+
+  .rule-t {
+    @apply border-t border-rule;
+  }
+
+  .field {
+    @apply w-full border-b border-rule bg-transparent py-3 text-[17px] outline-none
+           transition-colors placeholder:text-muted/60 focus:border-ink;
+  }
+
+  .box {
+    @apply w-full rounded-none border border-rule bg-paper px-3 py-2.5 text-[15px]
+           outline-none transition-colors focus:border-ink;
+  }
+
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 border border-ink
+           bg-ink px-5 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-paper
+           transition-all duration-150 hover:bg-paper hover:text-ink
+           disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-ink
+           disabled:hover:text-paper;
+  }
+
+  .btn-ghost {
+    @apply inline-flex select-none items-center justify-center gap-2 border border-rule
+           bg-paper px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-ink
+           transition-all duration-150 hover:border-ink disabled:opacity-30;
+  }
+
+  .btn-quiet {
+    @apply inline-flex select-none items-center gap-1.5 font-mono text-[11px] uppercase
+           tracking-[0.14em] text-muted transition-colors hover:text-ink;
+  }
+
+  .card {
+    @apply border border-rule bg-paper;
+  }
+
+  .display {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+  }
+}
+
+/* The score gauge: eight cells, filled from the left. */
+.gauge {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+.gauge i {
+  display: block;
+  width: 5px;
+  height: 12px;
+  border: 1px solid var(--ink);
+  opacity: 0.22;
+}
+.gauge i[data-on="1"] {
+  background: var(--ink);
+  opacity: 1;
+}
+
+/* Progress hairline for the questionnaire. */
+.progress {
+  height: 2px;
+  background: var(--rule-soft);
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: riseIn 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Rendered document preview (docx / text). */
+.doc-render {
+  font-size: 14px;
+  line-height: 1.65;
+}
+.doc-render h1,
+.doc-render h2,
+.doc-render h3 {
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  margin: 1.4em 0 0.5em;
+}
+.doc-render h1 { font-size: 1.35em; }
+.doc-render h2 { font-size: 1.15em; }
+.doc-render h3 { font-size: 1em; }
+.doc-render p { margin: 0 0 0.85em; }
+.doc-render ul,
+.doc-render ol { margin: 0 0 0.85em 1.15em; list-style: disc; }
+.doc-render ol { list-style: decimal; }
+.doc-render li { margin-bottom: 0.3em; }
+.doc-render a { text-decoration: underline; }
+.doc-render table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+.doc-render td,
+.doc-render th { border: 1px solid var(--rule); padding: 6px 8px; text-align: left; }
+.doc-render img { max-width: 100%; height: auto; }
