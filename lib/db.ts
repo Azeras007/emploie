@@ -201,9 +201,14 @@ async function getPool(): Promise<PgPool> {
   if (!poolPromise) {
     poolPromise = (async () => {
       const { Pool } = await import("pg");
+      const local = /localhost|127\.0\.0\.1/.test(PG_URL);
       const pool = new Pool({
         connectionString: PG_URL,
-        ssl: /localhost|127\.0\.0\.1/.test(PG_URL) ? undefined : { rejectUnauthorized: false },
+        // Neon et Supabase présentent des certificats valides : on les vérifie.
+        // PGSSL_NO_VERIFY=1 relâche la vérification pour un serveur auto-signé.
+        ssl: local
+          ? undefined
+          : { rejectUnauthorized: process.env.PGSSL_NO_VERIFY !== "1" },
         max: 3,
       });
       await pool.query(
