@@ -42,8 +42,12 @@ La première visite sur `/admin` propose de créer le compte administrateur. Il 
 
    Ne créez pas `DATABASE_URL` à la main avant cette étape : Vercel refuse alors de la créer
    (« already has an existing environment variable »), et une variable vide ne relie rien.
-   Si c'est déjà fait, supprimez-la puis reliez la base. L'app lit aussi `POSTGRES_URL`,
-   `STORAGE_URL` et `NEON_DATABASE_URL`, au cas où vous choisiriez un préfixe personnalisé.
+   Si c'est déjà fait, supprimez-la puis reliez la base.
+
+   Le préfixe personnalisé de Vercel est géré : l'app reconnaît toute variable dont le nom
+   finit par `DATABASE_URL`, `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `DATABASE_URL_UNPOOLED`
+   ou `POSTGRES_URL_NON_POOLING` — donc `STORAGE_DATABASE_URL` aussi bien que `DATABASE_URL`.
+   Les variantes `NO_SSL` sont ignorées : la connexion à la base reste chiffrée.
 3. **Storage → Blob** : créez un magasin. Vercel injecte `BLOB_READ_WRITE_TOKEN`.
 4. **Settings → Environment Variables** : ajoutez `AUTH_SECRET`, généré par
    `openssl rand -base64 32`. Sans lui, l'espace admin refuse de démarrer — c'est voulu :

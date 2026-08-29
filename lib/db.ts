@@ -15,32 +15,57 @@ interface Shape {
 
 const EMPTY: Shape = { applicants: {}, invites: {}, users: {}, meta: {} };
 
-/** Noms de variables utilisés par Vercel, Neon et Supabase, par ordre de préférence. */
-const PG_ENV_NAMES = [
+/**
+ * Vercel laisse préfixer les variables d'une intégration : Neon produit alors
+ * STORAGE_DATABASE_URL plutôt que DATABASE_URL. Plutôt que de deviner les noms,
+ * on reconnaît les suffixes, quel que soit le préfixe choisi.
+ */
+const PG_URL_SUFFIXES = [
   "DATABASE_URL",
   "POSTGRES_URL",
   "POSTGRES_PRISMA_URL",
-  "POSTGRES_URL_NON_POOLING",
   "DATABASE_URL_UNPOOLED",
-  "STORAGE_URL",
-  "NEON_DATABASE_URL",
+  "POSTGRES_URL_NON_POOLING",
 ] as const;
 
-function findPgUrl(): { url: string; blankNames: string[] } {
-  const blankNames: string[] = [];
-  for (const name of PG_ENV_NAMES) {
-    const raw = process.env[name];
-    if (raw === undefined) continue;
-    const value = raw.trim();
-    // Une variable présente mais vide est un piège : elle empêche Vercel d'en créer
-    // une bonne, sans pour autant relier quoi que ce soit.
-    if (value === "") blankNames.push(name);
-    else return { url: value, blankNames };
-  }
-  return { url: "", blankNames };
+function isPostgresUrl(value: string): boolean {
+  return /^postgres(ql)?:\/\//i.test(value);
 }
 
-const { url: PG_URL, blankNames: PG_BLANK_NAMES } = findPgUrl();
+function findPgUrl(): { url: string; name: string; blankNames: string[] } {
+  const blankNames: string[] = [];
+  const entries = Object.entries(process.env);
+
+  const value = (name: string): string => (process.env[name] ?? "").trim();
+
+  for (const suffix of PG_URL_SUFFIXES) {
+    // Le nom exact d'abord, puis n'importe quel préfixe : STORAGE_DATABASE_URL, etc.
+    const candidates = [
+      suffix,
+      ...entries
+        .map(([name]) => name)
+        .filter((name) => name !== suffix && name.endsWith(`_${suffix}`))
+        .sort(),
+    ];
+
+    for (const name of candidates) {
+      // NO_SSL désactiverait le chiffrement de la connexion : jamais.
+      if (name.includes("NO_SSL")) continue;
+      const raw = process.env[name];
+      if (raw === undefined) continue;
+      const trimmed = value(name);
+      if (trimmed === "") {
+        if (!blankNames.includes(name)) blankNames.push(name);
+      } else if (isPostgresUrl(trimmed)) {
+        return { url: trimmed, name, blankNames };
+      }
+    }
+  }
+
+  return { url: "", name: "", blankNames };
+}
+
+const { url: PG_URL, name: PG_URL_NAME, blankNames: PG_BLANK_NAMES } = findPgUrl();
 
 export const DB_DRIVER: "postgres" | "file" = PG_URL ? "postgres" : "file";
 
@@ -66,10 +91,13 @@ export interface StorageStatus {
 /** Inventaire des variables de configuration, sans jamais divulguer leur contenu. */
 export function envReport(): string[] {
   const lines: string[] = [];
-  const set = PG_ENV_NAMES.filter((n) => (process.env[n] ?? "").trim() !== "");
-  if (set.length > 0) lines.push(`Base de données : ${set.join(", ")} présente`);
-  else if (PG_BLANK_NAMES.length > 0) lines.push(`Base de données : ${PG_BLANK_NAMES.join(", ")} présente mais vide`);
-  else lines.push("Base de données : aucune variable reçue (ni DATABASE_URL, ni POSTGRES_URL, ni STORAGE_URL)");
+  if (PG_URL_NAME) lines.push(`Base de données : ${PG_URL_NAME} utilisée`);
+  else if (PG_BLANK_NAMES.length > 0)
+    lines.push(`Base de données : ${PG_BLANK_NAMES.join(", ")} présente mais vide`);
+  else
+    lines.push(
+      "Base de données : aucune variable reçue (aucun nom finissant par DATABASE_URL ou POSTGRES_URL)"
+    );
 
   lines.push(
     (process.env.BLOB_READ_WRITE_TOKEN ?? "").trim() !== ""
