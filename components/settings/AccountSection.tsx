@@ -1,16 +1,21 @@
 "use client";
 
+import { appPath } from "@/lib/basePath";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Invite } from "@/lib/types";
 import { ConfirmButton, Field, Notice } from "./controls";
+import QrPanel from "./QrPanel";
+import { candidatureUrl } from "@/lib/links";
 
 export default function AccountSection({
   username,
   initialInvites,
+  publicBaseUrl,
 }: {
   username: string;
   initialInvites: Invite[];
+  publicBaseUrl: string;
 }) {
   const router = useRouter();
 
@@ -20,10 +25,6 @@ export default function AccountSection({
   const [creating, setCreating] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const [origin, setOrigin] = useState("");
-
-  // L'origine n'existe qu'au navigateur : on l'installe après le montage.
-  useEffect(() => setOrigin(window.location.origin), []);
 
   useEffect(() => {
     if (!copied) return;
@@ -32,14 +33,27 @@ export default function AccountSection({
   }, [copied]);
 
   function linkFor(invite: Invite): string {
-    return `${origin}/candidature/${invite.token}`;
+    return candidatureUrl(publicBaseUrl, invite.token);
+  }
+
+  async function setPrinted(invite: Invite, printed: boolean) {
+    setInvites((prev) => prev.map((i) => (i.id === invite.id ? { ...i, printed } : i)));
+    const res = await fetch(appPath("/api/admin/invitations"), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: invite.id, printed }),
+    });
+    if (!res.ok) {
+      setInvites((prev) => prev.map((i) => (i.id === invite.id ? { ...i, printed: !printed } : i)));
+    }
+    router.refresh();
   }
 
   async function createInvite() {
     setCreating(true);
     setInviteError(null);
     try {
-      const res = await fetch("/api/admin/invitations", {
+      const res = await fetch(appPath("/api/admin/invitations"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label }),
@@ -61,7 +75,7 @@ export default function AccountSection({
     const before = invites;
     setInvites((list) => list.filter((i) => i.id !== id));
     try {
-      const res = await fetch(`/api/admin/invitations?id=${encodeURIComponent(id)}`, {
+      const res = await fetch(appPath(`/api/admin/invitations?id=${encodeURIComponent(id)}`), {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -109,7 +123,7 @@ export default function AccountSection({
 
     setPwdBusy(true);
     try {
-      const res = await fetch("/api/admin/motdepasse", {
+      const res = await fetch(appPath("/api/admin/motdepasse"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
@@ -174,18 +188,30 @@ export default function AccountSection({
           </div>
         ) : null}
 
+        <div className="mt-6 rounded-2xl border border-custom3 bg-wash p-4 md:p-5">
+          <p className="text-[15px] font-semibold">Questionnaire général</p>
+          <p className="mt-1 break-all text-[11px] leading-snug text-custom1">
+            {candidatureUrl(publicBaseUrl)}
+          </p>
+          <p className="mt-2 text-[13px] leading-relaxed text-custom1">
+            L'adresse sans suivi de provenance. La plus courte, et celle qui ne dépend d'aucun
+            lien : elle répondra toujours.
+          </p>
+          <QrPanel url={candidatureUrl(publicBaseUrl)} />
+        </div>
+
         <ul className="mt-6 border-t border-custom3">
           {invites.length === 0 ? (
             <li className="py-6 text-[13px] text-custom1">Aucun lien pour le moment.</li>
           ) : null}
 
           {invites.map((invite) => (
-            <li key={invite.id} className="border-b border-custom32 py-4">
+            <li key={invite.id} className="border-b border-custom3 py-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <p className="truncate text-[15px]">{invite.label}</p>
                   <p className="mt-1 break-all text-[11px] leading-snug text-custom1">
-                    {origin ? linkFor(invite) : `…/candidature/${invite.token}`}
+                    {linkFor(invite)}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-3">
@@ -196,13 +222,21 @@ export default function AccountSection({
                     type="button"
                     className="btn-ghost min-h-[44px]"
                     onClick={() => void copy(invite)}
-                    disabled={!origin}
                   >
                     {copied === invite.id ? "Copié" : "Copier le lien"}
                   </button>
-                  <ConfirmButton onConfirm={() => void removeInvite(invite.id)} />
+                  {!invite.printed && (
+                    <ConfirmButton onConfirm={() => void removeInvite(invite.id)} />
+                  )}
                 </div>
               </div>
+
+              <QrPanel
+                url={linkFor(invite)}
+                token={invite.token}
+                printed={invite.printed}
+                onTogglePrinted={(next) => void setPrinted(invite, next)}
+              />
             </li>
           ))}
         </ul>

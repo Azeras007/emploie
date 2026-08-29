@@ -23,15 +23,50 @@ La première visite sur `/admin` propose de créer le compte administrateur. Il 
 
 ## Les adresses
 
+L'application est servie sous `/candidature` (option `basePath`), routes API et fichiers
+statiques compris. Elle se greffe ainsi sur le domaine de Valeur Ajoutée par une simple
+réécriture, sans qu'aucune ligne de code n'ait à connaître le domaine hôte.
+
 | Adresse | À quoi ça sert |
 |---|---|
-| `/` | Page d'accueil, deux portes : postuler ou administrer |
 | `/candidature` | Le questionnaire, ouvert à tous |
-| `/candidature/<jeton>` | Le même, via un lien d'invitation traçable |
-| `/connexion` | Connexion (ou création du compte à la première visite) |
-| `/admin` | La liste des dossiers |
-| `/admin/candidats/<id>` | La fiche d'un candidat — ajoutez `#documents` pour ouvrir les pièces |
-| `/admin/reglages` | Questionnaire, règles de tri, liens d'invitation, mot de passe |
+| `/candidature/l/<jeton>` | Le même, via un lien traçable — l'adresse des QR codes |
+| `/candidature/connexion` | Connexion (ou création du compte à la première visite) |
+| `/candidature/admin` | La liste des dossiers |
+| `/candidature/admin/candidats/<id>` | La fiche d'un candidat — `#documents` ouvre les pièces |
+| `/candidature/admin/reglages` | Questionnaire, tri, liens et QR codes, mot de passe |
+
+### Greffe sur valeur-ajoutee.com
+
+Dans le dépôt du site principal, `next.config.mjs` réécrit `/candidature/*` vers cette
+application dès que la variable `RECRUTEMENT_URL` est renseignée (sans elle, la règle
+est inerte). Les QR codes portent donc une adresse du domaine principal : si
+l'application déménage, seule cette destination change et tous les codes déjà imprimés
+continuent de fonctionner.
+
+## QR codes
+
+Chaque lien de candidature — et le questionnaire général — dispose d'un QR code
+téléchargeable depuis Réglages → Compte & liens :
+
+| Format | Pour quoi |
+|---|---|
+| Affiche A4 / A5 (PDF) | Prête à imprimer : logotype, accroche, code encadré, adresse en clair |
+| SVG (noir, ou orange) | Vectoriel — le format à donner à un imprimeur pour une devanture |
+| PNG 512 / 1024 / 2048 px | Écrans, réseaux sociaux, documents bureautiques |
+
+**Un QR imprimé ne se corrige plus.** Trois garanties le protègent :
+
+1. L'adresse est bâtie sur le **domaine public** réglable dans les réglages, jamais sur
+   celui de l'hébergeur.
+2. Un jeton inconnu, désactivé ou supprimé **n'est jamais une erreur** : le questionnaire
+   général répond à sa place. Seul le suivi de provenance est perdu.
+3. Un lien marqué « imprimé » **ne peut plus être supprimé** tant que la mention subsiste.
+
+Le code est produit avec la correction d'erreur maximale (niveau H). Mesuré sur un masque
+d'un seul tenant, il reste lisible jusqu'à environ 10 % de sa surface occultée — les 30 %
+souvent cités valent pour des altérations dispersées. Comptez 6 cm de côté au minimum sur
+une vitrine.
 
 ## Mettre en ligne sur Vercel
 

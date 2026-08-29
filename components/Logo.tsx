@@ -1,12 +1,17 @@
-import Image from "next/image";
 import Link from "next/link";
+import { BASE_PATH } from "@/lib/basePath";
 
 /**
  * Le logotype Valeur Ajoutée.
  *
+ * Servi par une balise <img> ordinaire, pas par next/image : sous `basePath`,
+ * l'optimiseur d'images reçoit une URL source non préfixée et répond 400
+ * (« isn't a valid image »). Le fichier est donc pré-dimensionné à 900 px de
+ * large — 69 Ko — ce qui rend l'optimiseur inutile ici.
+ *
  * Seule la version texte est employée : le fichier du monogramme
  * (logos/logo-icon.png) porte un fond crème qui dessinerait un rectangle beige
- * sur nos fonds blancs. Le logotype, lui, est détouré.
+ * sur nos fonds blancs.
  */
 export default function Logo({
   height = 34,
@@ -19,18 +24,20 @@ export default function Logo({
   className?: string;
   priority?: boolean;
 }) {
-  const src = "/logos/LOGO-TEXTE.jpg";
   // Ratio du fichier source : 5810×1981.
   const width = Math.round(height * (5810 / 1981));
 
   const image = (
-    <Image
-      src={src}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`${BASE_PATH}/logos/wordmark.png`}
       width={width}
       height={height}
       alt="Valeur Ajoutée"
       style={{ width, height, objectFit: "contain" }}
-      priority={priority}
+      loading={priority ? "eager" : "lazy"}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {...(priority ? ({ fetchPriority: "high" } as any) : {})}
     />
   );
 

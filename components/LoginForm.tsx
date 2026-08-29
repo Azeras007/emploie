@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
+import { appPath } from "@/lib/basePath";
 
 export default function LoginForm({
   setup,
@@ -31,7 +32,7 @@ export default function LoginForm({
 
     setBusy(true);
     try {
-      const res = await fetch(setup ? "/api/admin/inscription" : "/api/admin/session", {
+      const res = await fetch(appPath(setup ? "/api/admin/inscription" : "/api/admin/session"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ username, password }),

@@ -15,7 +15,7 @@ export default function NotFound() {
       </p>
       <p className="mt-10">
         <Link href="/" className="btn-quiet">
-          ← Retour à l'accueil
+          ← Aller au questionnaire
         </Link>
       </p>
     </main>

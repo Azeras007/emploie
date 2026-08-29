@@ -157,7 +157,7 @@ export default function PipelineClient({
             title={applicants.length === 0 ? "Aucune candidature pour l'instant" : "Rien ne correspond"}
             body={
               applicants.length === 0
-                ? "Créez un lien d'invitation dans les réglages, ou partagez l'adresse /candidature."
+                ? "Créez un lien d'invitation dans les réglages, ou partagez l'adresse du questionnaire."
                 : "Élargissez la recherche ou désactivez un filtre."
             }
           />

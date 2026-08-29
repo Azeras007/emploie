@@ -70,6 +70,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultSort: "score",
   jobTitle: "Candidature spontanée",
   companyName: "Valeur Ajoutée",
+  publicBaseUrl: "https://valeur-ajoutee.com",
   intro:
     "Dix questions, cinq minutes. Prenez le temps de répondre franchement : c'est ce qui nous permet de bien vous lire.",
 };

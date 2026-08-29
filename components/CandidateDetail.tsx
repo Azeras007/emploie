@@ -1,5 +1,6 @@
 "use client";
 
+import { appPath } from "@/lib/basePath";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -46,7 +47,7 @@ export default function CandidateDetail({
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function patch(body: Record<string, unknown>, flash?: string) {
-    const res = await fetch(`/api/admin/candidatures/${applicant.id}`, {
+    const res = await fetch(appPath(`/api/admin/candidatures/${applicant.id}`), {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
@@ -87,7 +88,7 @@ export default function CandidateDetail({
 
   async function remove() {
     if (!window.confirm("Supprimer définitivement ce dossier et ses documents ?")) return;
-    const res = await fetch(`/api/admin/candidatures/${applicant.id}`, { method: "DELETE" });
+    const res = await fetch(appPath(`/api/admin/candidatures/${applicant.id}`), { method: "DELETE" });
     if (res.ok) {
       router.replace("/admin");
       router.refresh();
@@ -290,7 +291,7 @@ export default function CandidateDetail({
               <DocumentViewer
                 files={applicant.files}
                 previews={previews}
-                baseUrl="/api/fichiers"
+                baseUrl={appPath("/api/fichiers")}
               />
             </div>
           </div>

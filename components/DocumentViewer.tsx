@@ -222,7 +222,7 @@ export default function DocumentViewer({
       </div>
 
       {preview.mode !== "unsupported" && preview.warning ? (
-        <p className="border-b border-custom32 bg-wash px-4 py-2.5 text-[12px] leading-snug text-custom1 sm:px-5">
+        <p className="border-b border-rule2 bg-wash px-4 py-2.5 text-[12px] leading-snug text-custom1 sm:px-5">
           {preview.warning}
         </p>
       ) : null}

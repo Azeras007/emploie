@@ -1,5 +1,6 @@
 "use client";
 
+import { appPath } from "@/lib/basePath";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -31,7 +32,7 @@ export default function AdminNav({
       : pathname.startsWith(href);
 
   async function logout() {
-    await fetch("/api/admin/session", { method: "DELETE" });
+    await fetch(appPath("/api/admin/session"), { method: "DELETE" });
     router.replace("/connexion");
     router.refresh();
   }

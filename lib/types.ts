@@ -127,6 +127,12 @@ export interface Settings {
   jobTitle: string;
   companyName: string;
   intro: string;
+  /**
+   * Domaine public inscrit dans les QR codes. C'est la seule chose qu'un QR
+   * imprimé ne pourra plus jamais changer : il doit désigner un domaine que
+   * vous maîtrisez, pas l'URL de l'hébergeur du moment.
+   */
+  publicBaseUrl: string;
 }
 
 export interface Invite {
@@ -136,6 +142,11 @@ export interface Invite {
   createdAt: string;
   uses: number;
   active: boolean;
+  /**
+   * Le lien a été imprimé (devanture, flyer, affiche). Son QR code ne peut plus
+   * être repris : la suppression du lien est alors bloquée dans les réglages.
+   */
+  printed?: boolean;
 }
 
 export interface User {

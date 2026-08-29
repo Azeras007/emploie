@@ -1,5 +1,6 @@
 "use client";
 
+import { appPath } from "@/lib/basePath";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -135,7 +136,7 @@ export default function Questionnaire({
       const body = new FormData();
       body.append("file", file);
       body.append("kind", kind);
-      const res = await fetch("/api/televersement", { method: "POST", body });
+      const res = await fetch(appPath("/api/televersement"), { method: "POST", body });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "L'envoi a échoué.");
       setUploads((prev) =>
@@ -160,7 +161,7 @@ export default function Questionnaire({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/candidature", {
+      const res = await fetch(appPath("/api/candidature"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -172,7 +173,7 @@ export default function Questionnaire({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "L'envoi a échoué.");
-      router.push(`/candidature/envoyee?ref=${encodeURIComponent(data.ref)}`);
+      router.push(`/envoyee?ref=${encodeURIComponent(data.ref)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "L'envoi a échoué.");
       setSubmitting(false);

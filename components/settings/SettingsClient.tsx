@@ -1,5 +1,6 @@
 "use client";
 
+import { appPath } from "@/lib/basePath";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -88,7 +89,7 @@ export default function SettingsClient({
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/reglages", {
+      const res = await fetch(appPath("/api/admin/reglages"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
@@ -176,7 +177,22 @@ export default function SettingsClient({
                   className="box"
                   value={settings.companyName}
                   onChange={(e) => patch({ companyName: e.target.value })}
-                  placeholder="Maud"
+                  placeholder="Valeur Ajoutée"
+                />
+              </Field>
+              <Field
+                label="Domaine public"
+                hint="L'adresse inscrite dans les QR codes. Une fois un code imprimé, elle ne peut plus changer : indiquez un domaine que vous maîtrisez, jamais celui de l'hébergeur."
+                className="md:col-span-2"
+              >
+                <input
+                  className="box"
+                  value={settings.publicBaseUrl}
+                  onChange={(e) => patch({ publicBaseUrl: e.target.value })}
+                  placeholder="https://valeur-ajoutee.com"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  spellCheck={false}
                 />
               </Field>
               <Field
@@ -225,7 +241,11 @@ export default function SettingsClient({
 
         {/* ---------- 4. Compte & liens ---------- */}
         {tab === "compte" ? (
-          <AccountSection username={username} initialInvites={initialInvites} />
+          <AccountSection
+            username={username}
+            initialInvites={initialInvites}
+            publicBaseUrl={settings.publicBaseUrl}
+          />
         ) : null}
       </div>
 

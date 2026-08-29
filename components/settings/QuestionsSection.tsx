@@ -69,7 +69,7 @@ export default function QuestionsSection({
 
           return (
             <article key={i} className="card p-4 md:p-5">
-              <div className="flex items-center justify-between gap-2 border-b border-custom32 pb-3">
+              <div className="flex items-center justify-between gap-2 border-b border-rule2 pb-3">
                 <span className="text-[11px] tabular-nums text-custom1">
                   {String(i + 1).padStart(2, "0")}
                   <span className="ml-3 normal-case text-black">{q.id || "identifiant à générer"}</span>
@@ -225,7 +225,7 @@ export default function QuestionsSection({
                 ) : null}
               </div>
 
-              <div className="mt-2 border-t border-custom32 pt-1">
+              <div className="mt-2 border-t border-rule2 pt-1">
                 <Check
                   checked={Boolean(q.required)}
                   onChange={(v) => patch(i, { required: v })}

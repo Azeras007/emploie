@@ -1,7 +1,23 @@
 import type { NextConfig } from "next";
 
+/**
+ * L'application est servie sous /candidature, y compris ses routes API et ses
+ * fichiers statiques. Elle se greffe ainsi telle quelle sur le domaine de
+ * Valeur Ajoutée via une simple réécriture, sans que rien dans le code n'ait à
+ * connaître le domaine hôte : `next/link`, `next/image` et `fetch` relatif
+ * ajoutent le préfixe d'eux-mêmes.
+ *
+ * BASE_PATH permet de la servir ailleurs si besoin ; la chaîne vide la remet
+ * à la racine.
+ */
+const basePath = process.env.BASE_PATH ?? "/candidature";
+
 const nextConfig: NextConfig = {
+  basePath: basePath || undefined,
   serverExternalPackages: ["pg", "mammoth", "bcryptjs"],
+  // Exposé au navigateur : les <img> et <link> écrits à la main doivent
+  // préfixer eux-mêmes leur chemin, contrairement à next/link.
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
 };
 
 export default nextConfig;

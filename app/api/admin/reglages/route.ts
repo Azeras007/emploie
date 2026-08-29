@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { saveSettings } from "@/lib/db";
+import { DEFAULT_SETTINGS } from "@/lib/defaults";
 import { uid } from "@/lib/ids";
 import { OPERATORS, RULE_MODES } from "@/lib/types";
 import type { Operator, Question, Rule, RuleMode, Settings } from "@/lib/types";
@@ -52,6 +53,7 @@ const settingsSchema = z.object({
   jobTitle: z.string(),
   companyName: z.string(),
   intro: z.string(),
+  publicBaseUrl: z.string().optional(),
 });
 
 /* ------------------------------------------------------------------ *
@@ -206,5 +208,29 @@ function clean(input: z.infer<typeof settingsSchema>): Settings {
     jobTitle: input.jobTitle.trim(),
     companyName: input.companyName.trim(),
     intro: input.intro.trim(),
+    publicBaseUrl: normalizeBaseUrl(input.publicBaseUrl),
   };
+}
+
+/**
+ * Le domaine des QR codes. Une adresse imprimée ne se corrige plus : on refuse
+ * donc tout ce qui n'est pas une URL http(s) exploitable, et on retire la barre
+ * finale pour que la concaténation reste prévisible.
+ */
+function normalizeBaseUrl(raw: string | undefined): string {
+  const value = (raw ?? "").trim();
+  if (!value) return DEFAULT_SETTINGS.publicBaseUrl;
+
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+  } catch {
+    throw new ValidationError(
+      `« ${value} » n'est pas une adresse valide. Attendu : https://votre-domaine.fr`
+    );
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new ValidationError("L'adresse des QR codes doit commencer par https://");
+  }
+  return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
 }

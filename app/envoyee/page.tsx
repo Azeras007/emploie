@@ -32,7 +32,7 @@ export default async function SentPage({
 
         <p className="mt-12">
           <Link href="/" className="btn-quiet">
-            ← Retour à l'accueil
+            ← Revenir au questionnaire
           </Link>
         </p>
       </div>

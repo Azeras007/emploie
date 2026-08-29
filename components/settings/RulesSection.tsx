@@ -104,7 +104,7 @@ export default function RulesSection({
       {/* Rappel des quatre modes, en une phrase chacun. */}
       <dl className="mt-6 border-t border-custom3">
         {RULE_MODES.map((m) => (
-          <div key={m.value} className="flex flex-col gap-0.5 border-b border-custom32 py-2.5 md:flex-row md:gap-6">
+          <div key={m.value} className="flex flex-col gap-0.5 border-b border-rule2 py-2.5 md:flex-row md:gap-6">
             <dt className="text-[13px] font-semibold md:w-52 md:shrink-0">
               {m.label}
             </dt>
@@ -201,7 +201,7 @@ export default function RulesSection({
 
           return (
             <article key={rule.id || i} className="card p-4 md:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-custom32 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rule2 pb-3">
                 <Check
                   checked={rule.enabled}
                   onChange={(v) => patchRule(i, { enabled: v })}
@@ -280,7 +280,7 @@ export default function RulesSection({
 
                 <Field label="Valeur" className="md:col-span-3">
                   {!needsValue ? (
-                    <span className="flex h-[42px] items-center border border-custom32 px-3 text-[13px] font-semibold text-custom1">
+                    <span className="flex h-[42px] items-center border border-rule2 px-3 text-[13px] font-semibold text-custom1">
                       Sans valeur
                     </span>
                   ) : isFileTarget ? (

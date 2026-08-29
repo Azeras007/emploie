@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
+import { BASE_PATH } from "@/lib/basePath";
 import "./globals.css";
 
 // Mêmes familles que le site Valeur Ajoutée.
@@ -22,7 +23,10 @@ export const metadata: Metadata = {
   },
   description: "Questionnaire de candidature et suivi des dossiers.",
   applicationName: "Valeur Ajoutée",
-  icons: { icon: "/logo-192.png", apple: "/apple-touch-icon.png" },
+  icons: {
+    icon: `${BASE_PATH}/logo-192.png`,
+    apple: `${BASE_PATH}/apple-touch-icon.png`,
+  },
   robots: { index: false, follow: false },
 };
 
