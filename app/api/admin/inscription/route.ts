@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdmin, hasAdmin, startSession, isSecretConfigured, MISSING_SECRET_MESSAGE } from "@/lib/auth";
+import { StorageError, storageStatus } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: MISSING_SECRET_MESSAGE }, { status: 503 });
   }
 
+  const storage = await storageStatus();
+  if (!storage.ok) {
+    return NextResponse.json({ error: storage.problem }, { status: 503 });
+  }
+
   if (await hasAdmin()) {
     return NextResponse.json({ error: "Un compte existe déjà." }, { status: 409 });
   }
@@ -28,7 +34,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const user = await createAdmin(parsed.data.username, parsed.data.password);
-  await startSession(user);
-  return NextResponse.json({ ok: true });
+  try {
+    const user = await createAdmin(parsed.data.username, parsed.data.password);
+    await startSession(user);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Création du compte administrateur impossible", err);
+    return NextResponse.json(
+      {
+        error:
+          err instanceof StorageError
+            ? err.message
+            : "Le compte n'a pas pu être enregistré. Détail dans les journaux du serveur.",
+      },
+      { status: 500 }
+    );
+  }
 }

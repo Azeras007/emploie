@@ -13,10 +13,12 @@ export default function AdminNav({
   username,
   brand,
   ephemeral,
+  problem,
 }: {
   username: string;
   brand: string;
   ephemeral?: boolean;
+  problem?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -32,11 +34,15 @@ export default function AdminNav({
 
   return (
     <>
-      {ephemeral && (
+      {problem ? (
+        <p className="border-b border-ink bg-ink px-5 py-2 text-center text-[12px] leading-relaxed text-paper md:px-8">
+          {problem}
+        </p>
+      ) : ephemeral ? (
         <p className="border-b border-rule bg-wash px-5 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted md:px-8">
           Stockage local temporaire — ajoutez DATABASE_URL pour conserver les dossiers
         </p>
-      )}
+      ) : null}
       <header className="sticky top-0 z-30 border-b border-rule bg-paper/95 backdrop-blur">
       <div className="mx-auto flex max-w-[1180px] items-center gap-5 px-5 py-3.5 md:px-8">
         <Link href="/admin" className="shrink-0 font-mono text-[11px] uppercase tracking-[0.18em]">

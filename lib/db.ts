@@ -23,6 +23,68 @@ const PG_URL =
 
 export const DB_DRIVER: "postgres" | "file" = PG_URL ? "postgres" : "file";
 
+/** Vercel, et les plateformes du même genre, servent un disque en lecture seule. */
+export const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+/** Erreur de stockage dont le message est destiné à être lu par un humain. */
+export class StorageError extends Error {
+  constructor(message: string, public cause?: unknown) {
+    super(message);
+    this.name = "StorageError";
+  }
+}
+
+export interface StorageStatus {
+  ok: boolean;
+  driver: "postgres" | "file";
+  problem?: string;
+}
+
+/** Vérifie que les données peuvent réellement être écrites, sans rien enregistrer. */
+export async function storageStatus(): Promise<StorageStatus> {
+  if (DB_DRIVER === "postgres") {
+    try {
+      const pool = await getPool();
+      await pool.query("select 1");
+      return { ok: true, driver: "postgres" };
+    } catch (err) {
+      return {
+        ok: false,
+        driver: "postgres",
+        problem:
+          "La base de données ne répond pas : " +
+          (err instanceof Error ? err.message : String(err)) +
+          ". Vérifiez DATABASE_URL.",
+      };
+    }
+  }
+
+  if (IS_SERVERLESS) {
+    return {
+      ok: false,
+      driver: "file",
+      problem:
+        "Aucune base de données n'est reliée. Ici le disque est en lecture seule : ni les comptes " +
+        "ni les candidatures ne peuvent être enregistrés. Dans Vercel, ouvrez Storage → Postgres, " +
+        "reliez une base au projet, puis redéployez.",
+    };
+  }
+
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const probe = path.join(DATA_DIR, ".ecriture-test");
+    await fs.writeFile(probe, "ok", "utf8");
+    await fs.unlink(probe);
+    return { ok: true, driver: "file" };
+  } catch {
+    return {
+      ok: false,
+      driver: "file",
+      problem: `Impossible d'écrire dans ${DATA_DIR}. Vérifiez les droits sur ce dossier.`,
+    };
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * File driver — zero-config local development.
  * ------------------------------------------------------------------ */
@@ -42,10 +104,19 @@ async function readFileDb(): Promise<Shape> {
 }
 
 async function writeFileDb(next: Shape): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  const tmp = `${DB_FILE}.${process.pid}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(next, null, 2), "utf8");
-  await fs.rename(tmp, DB_FILE);
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const tmp = `${DB_FILE}.${process.pid}.tmp`;
+    await fs.writeFile(tmp, JSON.stringify(next, null, 2), "utf8");
+    await fs.rename(tmp, DB_FILE);
+  } catch (cause) {
+    throw new StorageError(
+      IS_SERVERLESS
+        ? "Aucune base de données n'est reliée et le disque est en lecture seule : rien ne peut être enregistré. Reliez un stockage Postgres au projet, puis redéployez."
+        : `Impossible d'écrire dans ${DATA_DIR}. Vérifiez les droits sur ce dossier.`,
+      cause
+    );
+  }
 }
 
 function mutateFileDb<T>(fn: (db: Shape) => T | Promise<T>): Promise<T> {
@@ -226,11 +297,16 @@ export async function saveUser(user: User): Promise<User> {
 
 export async function getSettings(): Promise<Settings> {
   let stored: Settings | null = null;
-  if (DB_DRIVER === "postgres") {
-    stored = await pgGet<Settings>("meta", "settings");
-  } else {
-    const db = await readFileDb();
-    stored = (db.meta.settings as Settings) ?? null;
+  try {
+    if (DB_DRIVER === "postgres") {
+      stored = await pgGet<Settings>("meta", "settings");
+    } else {
+      const db = await readFileDb();
+      stored = (db.meta.settings as Settings) ?? null;
+    }
+  } catch (err) {
+    console.error("Lecture des réglages impossible, valeurs par défaut utilisées", err);
+    return structuredClone(DEFAULT_SETTINGS);
   }
   if (!stored) return structuredClone(DEFAULT_SETTINGS);
   return {
