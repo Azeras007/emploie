@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { DEFAULT_SETTINGS } from "./defaults";
 import * as pg from "./pgStore";
+import { MIGRATION_HINT } from "./schema";
 import { filesReport } from "./storage";
 import type { Applicant, Invite, Settings, User } from "./types";
 
@@ -115,7 +116,7 @@ export async function storageStatus(): Promise<StorageStatus> {
     try {
       const pool = await getPool();
       await pool.query("select 1");
-      const schemaProblem = await pg.checkSchema(pool);
+      const schemaProblem = schemaError ?? (await pg.checkSchema(pool));
       if (schemaProblem) {
         return { ok: false, driver: "postgres", seen: envReport(), problem: schemaProblem };
       }
@@ -140,8 +141,8 @@ export async function storageStatus(): Promise<StorageStatus> {
       seen: envReport(),
       problem:
         `La variable ${PG_BLANK_NAMES.join(" et ")} existe mais est vide, donc aucune base ` +
-        "n'est reliée. Renseignez-la avec l'adresse de la base Valeur Ajoutée, la même que " +
-        "celle du site, puis redémarrez l'application.",
+        "n'est reliée. Renseignez-la avec l'adresse de la base des candidatures, puis " +
+        "redémarrez l'application.",
     };
   }
 
@@ -153,7 +154,7 @@ export async function storageStatus(): Promise<StorageStatus> {
       problem:
         "Aucune base de données n'est reliée, et le disque de cette plateforme est éphémère : " +
         "ni les comptes ni les candidatures ne seraient conservés. Renseignez DATABASE_URL avec " +
-        "l'adresse de la base Valeur Ajoutée.",
+        "l'adresse d'une base Postgres.",
     };
   }
 
@@ -225,6 +226,9 @@ function mutateFileDb<T>(fn: (db: Shape) => T | Promise<T>): Promise<T> {
 type PgPool = import("pg").Pool;
 let poolPromise: Promise<PgPool> | null = null;
 
+/** Renseigné si la création du schéma a échoué — affiché dans l'état du stockage. */
+let schemaError: string | null = null;
+
 async function getPool(): Promise<PgPool> {
   if (!poolPromise) {
     poolPromise = (async () => {
@@ -239,10 +243,18 @@ async function getPool(): Promise<PgPool> {
           : { rejectUnauthorized: process.env.PGSSL_NO_VERIFY !== "1" },
         max: 3,
       });
-      // Aucune table n'est créée ici : le schéma appartient au dépôt Valeur
-      // Ajoutée et vit dans sa migration `20260829180000_add_recruitment`.
-      // Une application qui crée ses tables toute seule finit par diverger du
-      // schéma que Prisma croit gérer.
+      // L'application est seule maîtresse de sa base : elle crée ses tables
+      // au premier démarrage, une bonne fois. Le script est rejouable, donc
+      // les démarrages suivants ne coûtent qu'un aller-retour.
+      //
+      // Un échec ici n'empêche pas d'ouvrir le pool : c'est presque toujours
+      // un manque de droits, et le message a plus de valeur affiché dans
+      // l'écran d'état du back-office qu'en trace de démarrage.
+      try {
+        await pg.ensureSchema(pool);
+      } catch (err) {
+        schemaError = `${MIGRATION_HINT} Erreur : ${err instanceof Error ? err.message : String(err)}`;
+      }
       return pool;
     })();
   }
@@ -253,7 +265,7 @@ async function getPool(): Promise<PgPool> {
  * API unifiée
  *
  * Deux implémentations derrière la même surface : les tables relationnelles de
- * la base Valeur Ajoutée en production, un fichier JSON en développement.
+ * Postgres en production, un fichier JSON en développement.
  * ------------------------------------------------------------------ */
 
 /** Position et libellé des questions, recopiés avec chaque réponse. */
