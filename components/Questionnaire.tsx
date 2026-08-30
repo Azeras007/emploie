@@ -279,7 +279,7 @@ export default function Questionnaire({
 
           <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
             {error && (
-              <p role="alert" className="truncate text-right text-[13px] font-medium text-primaire-hover">
+              <p role="alert" className="truncate text-right text-[13px] font-medium text-corail-fonce">
                 {error}
               </p>
             )}
@@ -303,7 +303,7 @@ export default function Questionnaire({
 
 function BigNumber({ value }: { value: string }) {
   return (
-    <span className="block text-[13px] font-bold tabular-nums text-primaire md:absolute md:-left-24 md:top-2 md:text-[15px]">
+    <span className="block text-[13px] font-bold tabular-nums text-corail md:absolute md:-left-24 md:top-2 md:text-[15px]">
       {value}
     </span>
   );
@@ -336,8 +336,8 @@ function IdentityStep({
       </p>
 
       {uploadsProblem && (
-        <div className="mt-8 rounded-2xl border border-primaire/30 bg-primaire/5 p-4">
-          <p className="eyebrow text-primaire-hover">Dépôt de documents indisponible</p>
+        <div className="mt-8 rounded-2xl border border-corail/40 bg-corail-pale p-4">
+          <p className="eyebrow text-corail-fonce">Dépôt de documents indisponible</p>
           <p className="mt-2 text-[14px] leading-relaxed">
             Le CV ne peut pas être reçu pour le moment. Prévenez votre contact plutôt que de
             remplir le questionnaire : il serait perdu à la dernière étape.
@@ -440,7 +440,7 @@ function QuestionStep({
       <BigNumber value={`${pad(index)}/${pad(total)}`} />
       <h2 className="display mt-3 text-[26px] leading-[1.15] md:mt-0 md:text-[34px]">
         {question.label}
-        {question.required ? <span className="text-primaire">&nbsp;*</span> : null}
+        {question.required ? <span className="text-corail">&nbsp;*</span> : null}
       </h2>
       {question.hint && (
         <p className="mt-3 text-[15px] leading-relaxed text-custom1">{question.hint}</p>
@@ -767,7 +767,7 @@ function Dropzone({
               <span
                 className={clsx(
                   "shrink-0 text-[12px] font-medium tabular-nums",
-                  u.state === "erreur" ? "text-primaire-hover" : "text-custom2"
+                  u.state === "erreur" ? "text-corail-fonce" : "text-custom2"
                 )}
               >
                 {u.state === "envoi"
@@ -790,7 +790,7 @@ function Dropzone({
       )}
 
       {mine.some((u) => u.state === "erreur") && (
-        <p className="mt-2 rounded-xl bg-primaire/10 px-3 py-2 text-[13px] text-primaire-hover">
+        <p className="mt-2 rounded-xl bg-corail-pale px-3 py-2 text-[13px] text-corail-fonce">
           {mine.find((u) => u.state === "erreur")?.error}
         </p>
       )}

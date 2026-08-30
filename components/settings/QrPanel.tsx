@@ -56,7 +56,7 @@ export default function QrPanel({
 
             <div className="min-w-0 flex-1">
               <p className="eyebrow">Adresse encodée</p>
-              <p className="mt-1 break-all text-[13px] font-semibold text-primaire-hover">{url}</p>
+              <p className="mt-1 break-all text-[13px] font-semibold text-primaire">{url}</p>
               <p className="mt-3 text-[13px] leading-relaxed text-custom1">
                 Cette adresse est gravée dans le code une fois imprimé. Tout le reste — les
                 questions, les règles de tri, le libellé de ce lien — reste modifiable sans jamais
@@ -95,8 +95,8 @@ export default function QrPanel({
               <a className="btn-ghost" href={api({ format: "svg" })}>
                 SVG vectoriel
               </a>
-              <a className="btn-ghost" href={api({ format: "svg-orange" })}>
-                SVG orange
+              <a className="btn-ghost" href={api({ format: "svg-marque" })}>
+                SVG bleu Kiabi
               </a>
             </div>
             <p className="mt-2.5 text-[12px] leading-relaxed text-custom1">

@@ -169,7 +169,7 @@ export default function SettingsClient({
                   className="box"
                   value={settings.jobTitle}
                   onChange={(e) => patch({ jobTitle: e.target.value })}
-                  placeholder="Chargé·e de clientèle"
+                  placeholder="Conseiller·ère de vente"
                 />
               </Field>
               <Field label="Nom de la structure">
@@ -177,7 +177,7 @@ export default function SettingsClient({
                   className="box"
                   value={settings.companyName}
                   onChange={(e) => patch({ companyName: e.target.value })}
-                  placeholder="Valeur Ajoutée"
+                  placeholder="Kiabi"
                 />
               </Field>
               <Field
@@ -189,7 +189,7 @@ export default function SettingsClient({
                   className="box"
                   value={settings.publicBaseUrl}
                   onChange={(e) => patch({ publicBaseUrl: e.target.value })}
-                  placeholder="https://valeur-ajoutee.com"
+                  placeholder="https://recrutement.kiabi.com"
                   inputMode="url"
                   autoCapitalize="none"
                   spellCheck={false}

@@ -6,7 +6,7 @@ import { findUser, listUsers, saveUser } from "./db";
 import { uid } from "./ids";
 import type { User } from "./types";
 
-export const SESSION_COOKIE = "emploie_session";
+export const SESSION_COOKIE = "kiabi_recrutement_session";
 
 /** Vrai quand le secret de signature des sessions est configuré. */
 export function isSecretConfigured(): boolean {

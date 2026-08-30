@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 const querySchema = z.object({
   /** Jeton d'invitation ; absent, le QR pointe vers le questionnaire général. */
   token: z.string().optional(),
-  format: z.enum(["svg", "svg-orange", "png", "pdf"]).default("svg"),
+  format: z.enum(["svg", "svg-marque", "png", "pdf"]).default("svg"),
   size: z.coerce.number().int().min(128).max(4096).optional(),
   page: z.enum(["a4", "a5"]).default("a4"),
   /** Aperçu à l'écran plutôt que téléchargement. */
@@ -30,7 +30,7 @@ function filename(label: string, format: string, size?: number, page?: string): 
 
   if (format === "pdf") return `qr-${slug}-affiche-${page}.pdf`;
   if (format === "png") return `qr-${slug}-${size}px.png`;
-  if (format === "svg-orange") return `qr-${slug}-orange.svg`;
+  if (format === "svg-marque") return `qr-${slug}-bleu.svg`;
   return `qr-${slug}.svg`;
 }
 
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
       });
     }
 
-    const svg = format === "svg-orange" ? await qrSvgBrand(url) : await qrSvg(url);
+    const svg = format === "svg-marque" ? await qrSvgBrand(url) : await qrSvg(url);
     return new NextResponse(svg, {
       headers: { ...headers, "Content-Type": "image/svg+xml; charset=utf-8" },
     });

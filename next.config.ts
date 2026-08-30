@@ -2,13 +2,13 @@ import type { NextConfig } from "next";
 
 /**
  * L'application est servie sous /candidature, y compris ses routes API et ses
- * fichiers statiques. Elle se greffe ainsi telle quelle sur le domaine de
- * Valeur Ajoutée via une simple réécriture, sans que rien dans le code n'ait à
- * connaître le domaine hôte : `next/link`, `next/image` et `fetch` relatif
- * ajoutent le préfixe d'eux-mêmes.
+ * fichiers statiques. Elle se greffe ainsi telle quelle sur un domaine Kiabi
+ * par une simple réécriture, sans que rien dans le code n'ait à connaître le
+ * domaine hôte : `next/link`, `next/image` et `fetch` relatif ajoutent le
+ * préfixe d'eux-mêmes.
  *
- * BASE_PATH permet de la servir ailleurs si besoin ; la chaîne vide la remet
- * à la racine.
+ * BASE_PATH permet de la servir ailleurs ; la chaîne vide la remet à la racine,
+ * et les adresses des QR codes suivent (voir lib/links.ts).
  */
 const basePath = process.env.BASE_PATH ?? "/candidature";
 

@@ -2,7 +2,7 @@ import clsx from "clsx";
 import type { ReactNode } from "react";
 import { STATUSES, type Status } from "@/lib/types";
 
-/** Jauge de score : huit barres arrondies, remplies dans l'orange de marque. */
+/** Jauge de score : huit barres arrondies, remplies au corail de marque. */
 export function Gauge({ percent, className }: { percent: number; className?: string }) {
   const cells = 8;
   const on = Math.round((Math.max(0, Math.min(100, percent)) / 100) * cells);
@@ -35,10 +35,14 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
   return <p className={clsx("eyebrow", className)}>{children}</p>;
 }
 
-/** Chaque statut a sa pastille : le vert de marque pour les profils retenus. */
+/**
+ * Chaque statut a sa pastille. Le corail ne sert qu'en teinte pâle, sous du
+ * texte foncé : en aplat, son contraste avec le blanc (3,4:1) ne passerait pas
+ * sur du texte de 13 px.
+ */
 const STATUS_STYLE: Record<Status, string> = {
   nouveau: "border-custom3 bg-white text-custom1",
-  en_revue: "border-primaire/30 bg-primaire/10 text-primaire-hover",
+  en_revue: "border-corail/40 bg-corail-pale text-corail-fonce",
   entretien: "border-primaire bg-primaire text-white",
   retenu: "border-secondaire bg-secondaire text-white",
   refuse: "border-custom3 bg-wash text-custom2",
@@ -55,7 +59,7 @@ export function StatusPill({ status, className }: { status: Status; className?: 
 export function StatusDot({ status }: { status: Status }) {
   const tone: Record<Status, string> = {
     nouveau: "bg-custom3",
-    en_revue: "bg-primaire/40",
+    en_revue: "bg-corail",
     entretien: "bg-primaire",
     retenu: "bg-secondaire",
     refuse: "bg-custom2/40",
@@ -65,7 +69,7 @@ export function StatusDot({ status }: { status: Status }) {
 
 export function Empty({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-custom3 bg-wash px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-s border border-dashed border-custom3 bg-wash px-6 py-16 text-center">
       <p className="display text-[20px]">{title}</p>
       <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-custom1">{body}</p>
       {action ? <div className="mt-6">{action}</div> : null}

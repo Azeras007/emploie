@@ -1,9 +1,10 @@
-# Candidatures — Valeur Ajoutée
+# Candidatures — Kiabi
 
-Un questionnaire de candidature et le back-office pour le dépouiller, aux couleurs de
-Valeur Ajoutée, utilisable au doigt sur un téléphone.
+Un questionnaire de candidature et le back-office pour le dépouiller, aux couleurs de Kiabi,
+utilisable au doigt sur un téléphone — devant le magasin, dans la file, à l'arrêt de bus.
 
-- **Côté candidat** — un lien, dix questions posées une par une, puis le dépôt du CV et de la lettre.
+- **Côté candidat** — un lien ou un QR code sur la devanture, dix questions posées une par une,
+  puis le dépôt du CV et de la lettre.
 - **Côté recruteur** — un compte (identifiant + mot de passe, pas d'e-mail), la liste des dossiers
   classés par pertinence, la fiche complète de chaque profil avec le CV affiché dans la page.
 - **Le tri est à vous** — les questions et les règles de pertinence s'éditent depuis les réglages,
@@ -16,16 +17,17 @@ npm install
 npm run dev
 ```
 
-L'app tourne sur http://localhost:3210. Sans configuration, elle range tout dans `.data/`
-(base JSON + fichiers) : rien à installer, mais rien de durable non plus.
+L'app tourne sur http://localhost:3210/candidature. Sans configuration, elle range tout dans
+`.data/` (base JSON + fichiers) : rien à installer, mais rien de durable non plus.
 
-La première visite sur `/admin` propose de créer le compte administrateur. Il n'y en a qu'un.
+La première visite sur `/candidature/admin` propose de créer le compte administrateur. Il n'y
+en a qu'un.
 
 ## Les adresses
 
 L'application est servie sous `/candidature` (option `basePath`), routes API et fichiers
-statiques compris. Elle se greffe ainsi sur le domaine de Valeur Ajoutée par une simple
-réécriture, sans qu'aucune ligne de code n'ait à connaître le domaine hôte.
+statiques compris. Elle se greffe ainsi sur un domaine Kiabi par une simple réécriture, sans
+qu'aucune ligne de code n'ait à connaître le domaine hôte.
 
 | Adresse | À quoi ça sert |
 |---|---|
@@ -36,13 +38,9 @@ réécriture, sans qu'aucune ligne de code n'ait à connaître le domaine hôte.
 | `/candidature/admin/candidats/<id>` | La fiche d'un candidat — `#documents` ouvre les pièces |
 | `/candidature/admin/reglages` | Questionnaire, tri, liens et QR codes, mot de passe |
 
-### Greffe sur valeur-ajoutee.com
-
-Dans le dépôt du site principal, `next.config.mjs` réécrit `/candidature/*` vers cette
-application dès que la variable `RECRUTEMENT_URL` est renseignée (sans elle, la règle
-est inerte). Les QR codes portent donc une adresse du domaine principal : si
-l'application déménage, seule cette destination change et tous les codes déjà imprimés
-continuent de fonctionner.
+`BASE_PATH` déplace tout ce bloc ailleurs ; la chaîne vide le remet à la racine du domaine.
+Les adresses inscrites dans les QR codes suivent automatiquement — le préfixe n'est écrit
+qu'à un seul endroit.
 
 ## QR codes
 
@@ -52,30 +50,31 @@ téléchargeable depuis Réglages → Compte & liens :
 | Format | Pour quoi |
 |---|---|
 | Affiche A4 / A5 (PDF) | Prête à imprimer : logotype, accroche, code encadré, adresse en clair |
-| SVG (noir, ou orange) | Vectoriel — le format à donner à un imprimeur pour une devanture |
+| SVG (noir, ou bleu Kiabi) | Vectoriel — le format à donner à un imprimeur pour une devanture |
 | PNG 512 / 1024 / 2048 px | Écrans, réseaux sociaux, documents bureautiques |
 
 **Un QR imprimé ne se corrige plus.** Trois garanties le protègent :
 
-1. L'adresse est bâtie sur le **domaine public** réglable dans les réglages, jamais sur
-   celui de l'hébergeur.
+1. L'adresse est bâtie sur le **domaine public** réglable dans les réglages, jamais sur celui
+   de l'hébergeur du moment.
 2. Un jeton inconnu, désactivé ou supprimé **n'est jamais une erreur** : le questionnaire
    général répond à sa place. Seul le suivi de provenance est perdu.
 3. Un lien marqué « imprimé » **ne peut plus être supprimé** tant que la mention subsiste.
+
+La version de marque du code est **bleu pétrole**, et non corail : un lecteur distingue les
+modules par leur luminance, et le corail n'en offre pas assez sur blanc pour être lu de loin
+ou par mauvaise lumière.
 
 Le code est produit avec la correction d'erreur maximale (niveau H). Mesuré sur un masque
 d'un seul tenant, il reste lisible jusqu'à environ 10 % de sa surface occultée — les 30 %
 souvent cités valent pour des altérations dispersées. Comptez 6 cm de côté au minimum sur
 une vitrine.
 
-## Mettre en ligne sur le Mac Mini
-
-L'application tourne sur la **même machine que le site** : elle écrit dans la base Valeur
-Ajoutée, dont `DATABASE_URL` pointe sur `localhost`.
+## Mettre en ligne
 
 ```bash
-git clone https://github.com/Azeras007/emploie.git ~/valeur-ajoutee-recrutement
-cd ~/valeur-ajoutee-recrutement
+git clone <ce-dépôt> ~/kiabi-recrutement
+cd ~/kiabi-recrutement
 npm ci && npm run build
 pm2 start ecosystem.config.cjs && pm2 save
 ```
@@ -83,26 +82,19 @@ pm2 start ecosystem.config.cjs && pm2 save
 Son `.env` (voir `.env.example`) :
 
 ```bash
-DATABASE_URL="postgresql://…@localhost:5432/valeur_ajoutee"   # la même que le site
-AUTH_SECRET="…"                                               # openssl rand -base64 32
-UPLOAD_DIR="/Users/quentinmini/candidatures-fichiers"         # HORS du dépôt
+DATABASE_URL="postgresql://…/kiabi_recrutement"   # le compte doit pouvoir créer des tables
+AUTH_SECRET="…"                                   # openssl rand -base64 32
+UPLOAD_DIR="/srv/kiabi-candidatures-fichiers"     # HORS du dépôt
 ```
 
-Puis, dans le `.env` **du site principal**, pour que `/candidature` soit servi :
-
-```bash
-RECRUTEMENT_URL=http://127.0.0.1:3210
-```
-
-Les tables sont créées automatiquement au déploiement du site (`deploy.sh` lance
-`prisma db push`) : rien à faire côté base.
+Puis, sur le domaine public, une réécriture de `/candidature/*` vers `http://127.0.0.1:3210`.
 
 ### Où vivent les CV
 
 Sur le disque, dans `UPLOAD_DIR`, rangés par année et par mois. **Ce dossier doit être hors
 du dépôt** : le déploiement recopie l'application et effacerait un dossier situé à
-l'intérieur. En production, l'application refuse de démarrer sans le signaler si `UPLOAD_DIR`
-tombe dans son propre répertoire.
+l'intérieur. L'application le signale d'elle-même si `UPLOAD_DIR` tombe dans son propre
+répertoire.
 
 Sauvegardez ce dossier avec votre base : les deux sont indissociables — la base référence des
 fichiers, les fichiers n'ont de sens que reliés à une candidature.
@@ -122,6 +114,10 @@ Le score est le rapport entre les points obtenus et les points possibles, ramen�
 Au-dessus du seuil que vous fixez, la candidature est signalée comme pertinente. La page de
 réglages simule le résultat sur les candidatures déjà reçues, avant même d'enregistrer.
 
+Les règles livrées traduisent les priorités d'un magasin : la disponibilité **le samedi** et
+sur les **temps forts** pèse plus lourd que le nombre d'années d'expérience, et un trajet
+court prédit mieux la tenue dans la durée qu'un CV bien tourné.
+
 ## Documents acceptés
 
 PDF, Word (`.doc`, `.docx`), OpenDocument, RTF, texte, Markdown, CSV, HTML et les images
@@ -134,20 +130,41 @@ dans l'origine de l'application.
 
 ## Identité visuelle
 
-Palette, typographie et logotype repris du site Valeur Ajoutée
-(`/Users/laurans/Code/Valeur_ajoutee`) : orange `#f46f40` et vert `#234737`, gris neutres
-`#5b5b5b` / `#a0a0a0` / `#dbdbdb`, Fraunces pour les titres et Manrope pour le texte, formes
-généreusement arrondies et ombres douces.
+Palette et typographie du système de design Kiabi :
 
-Les valeurs sont regroupées en tête de `app/globals.css` — les changer là suffit à changer
-l'identité de toute l'application. Le logotype vit dans `public/logos/LOGO-TEXTE.jpg` et
-s'insère via le composant `components/Logo.tsx`.
+| Rôle | Couleur |
+|---|---|
+| Actions, aplats sombres, titres | Bleu pétrole `#040037` (survol `#36335f`) |
+| Accents, jauges, alertes | Corail `#ff4529` (texte `#b5311d`, fond `#ffecea`) |
+| Profils retenus | Vert profond `#00565a` |
+| Gris neutres | `#4c4c54` / `#87878c` / `#e2e2e4` / `#f8f8f8` |
+
+Figtree pour les titres, Inter pour le texte — les deux familles de kiabi.com. Angles
+généreux (12 px pour les champs, 16 px pour les cartes, pilules pour les boutons) et ombres
+diffuses plutôt que portées.
+
+Les valeurs sont regroupées en tête de `app/globals.css`, et reprises dans
+`tailwind.config.ts` — les changer là suffit à changer l'identité de toute l'application.
+
+### Le logotype
+
+Le dépôt n'embarque **aucun fichier de marque**. En son absence, `components/Logo.tsx`
+compose « Kiabi » en Figtree très gras, au bleu pétrole. Pour utiliser le logotype officiel :
+
+```bash
+cp kiabi.svg public/logos/            # et kiabi.png pour les affiches PDF
+echo 'NEXT_PUBLIC_LOGO_FILE=/logos/kiabi.svg' >> .env
+```
+
+Il remplace alors le lettrage partout — en-tête, back-office, confirmation, 404 — sans toucher
+au code. Voir `public/logos/LISEZMOI.txt`.
 
 ## La base de données
 
-Les candidatures vivent dans la **base Valeur Ajoutée**, pas dans une base séparée. Le schéma
-appartient au dépôt du site principal, dans la migration
-`prisma/migrations/20260829180000_add_recruitment/` :
+L'application est seule maîtresse de sa base : elle **crée ses tables au premier démarrage**,
+avec un script rejouable qui ne détruit ni ne modifie rien d'existant (`lib/schema.ts`). Le
+compte indiqué dans `DATABASE_URL` doit donc pouvoir créer des tables ; s'il ne le peut pas,
+l'écran d'état du back-office le dit avec l'erreur exacte.
 
 | Table | Contenu |
 |---|---|
@@ -162,30 +179,18 @@ Les réponses sont éclatées en lignes plutôt que rangées en JSON : elles dev
 interrogeables directement en SQL, sans passer par l'application.
 
 ```sql
-select a."questionLabel", count(*)
-  from "JobApplicationAnswer" a
- where a."valueText" = 'Immédiatement'
- group by 1;
+select count(*)
+  from "JobApplicationAnswer"
+ where "questionId" = 'creneaux'
+   and 'Le samedi' = any("valueList");
 ```
 
 Le libellé de la question est **recopié à l'enregistrement**. Le questionnaire reste donc
 modifiable sans rendre illisibles les candidatures déjà reçues.
 
-### Appliquer la migration
-
-L'historique Prisma du site remonte à une époque SQLite : `prisma migrate deploy` ne peut pas
-le rejouer. La migration s'applique donc directement, et elle est **rejouable** — chaque objet
-n'est créé que s'il n'existe pas.
-
-```bash
-psql "$DATABASE_URL" -f prisma/migrations/20260829180000_add_recruitment/migration.sql
-```
-
-Elle ne fait que créer six tables : rien d'existant n'est modifié ni supprimé.
-
-Si la migration n'a pas été appliquée, ou si le schéma dérive, l'application le dit à la
-connexion en nommant la table ou la colonne manquante — plutôt que d'échouer à la première
-candidature.
+Si le schéma dérive — une colonne renommée à la main, une table supprimée — l'application le
+dit à la connexion en nommant la table ou la colonne manquante, plutôt que d'échouer à la
+première candidature.
 
 ## Sous le capot
 
