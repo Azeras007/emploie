@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { Figtree, Inter } from "next/font/google";
 import { BASE_PATH } from "@/lib/basePath";
 import "./globals.css";
 
-// Mêmes familles que le site Valeur Ajoutée.
-const display = Fraunces({
+// Les deux familles de kiabi.com : Figtree pour les titres, Inter pour le texte.
+const display = Figtree({
   variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
 });
 
-const sans = Manrope({
+const sans = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
@@ -18,20 +18,20 @@ const sans = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "Recrutement — Valeur Ajoutée",
-    template: "%s — Valeur Ajoutée",
+    default: "Recrutement — Kiabi",
+    template: "%s — Kiabi",
   },
-  description: "Questionnaire de candidature et suivi des dossiers.",
-  applicationName: "Valeur Ajoutée",
+  description: "Déposez votre candidature en magasin Kiabi : questionnaire, CV et lettre.",
+  applicationName: "Kiabi Recrutement",
   icons: {
-    icon: `${BASE_PATH}/logo-192.png`,
+    icon: `${BASE_PATH}/icone.svg`,
     apple: `${BASE_PATH}/apple-touch-icon.png`,
   },
   robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#040037",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

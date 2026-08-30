@@ -1,22 +1,32 @@
 import "server-only";
 import type { Pool } from "pg";
 import { uid } from "./ids";
-import { MIGRATION_HINT, TABLES } from "./schema";
+import { MIGRATION_HINT, SCHEMA_SQL, TABLES } from "./schema";
 import type { Applicant, AnswerValue, Invite, Settings, StoredFile, User } from "./types";
 
 /**
- * Accès aux tables de recrutement de la base Valeur Ajoutée.
+ * Accès aux tables de recrutement.
  *
  * Les réponses sont éclatées en lignes plutôt que rangées en JSON : elles
  * deviennent interrogeables depuis la base (« combien de candidats disponibles
- * immédiatement ? ») sans passer par l'application. Le libellé de la question
- * est recopié à l'enregistrement, pour qu'une candidature reste lisible telle
+ * le samedi ? ») sans passer par l'application. Le libellé de la question est
+ * recopié à l'enregistrement, pour qu'une candidature reste lisible telle
  * qu'elle a été remplie même si le questionnaire change ensuite.
  */
 
 /* ------------------------------------------------------------------ *
- * Vérification du schéma
+ * Schéma
  * ------------------------------------------------------------------ */
+
+/**
+ * Crée les tables si elles manquent. Rejouable sans dommage : voir SCHEMA_SQL.
+ *
+ * Appelé une fois, à l'ouverture du pool. `pool.query` accepte un script à
+ * plusieurs instructions tant qu'aucun paramètre n'est passé.
+ */
+export async function ensureSchema(pool: Pool): Promise<void> {
+  await pool.query(SCHEMA_SQL);
+}
 
 export async function checkSchema(pool: Pool): Promise<string | null> {
   const { rows } = await pool.query<{ table_name: string; column_name: string }>(

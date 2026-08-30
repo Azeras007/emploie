@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-[900px] flex-col justify-center px-5 md:px-8">
       <Logo height={32} className="mb-8" />
-      <p className="eyebrow text-primaire">Erreur 404</p>
+      <p className="eyebrow text-corail">Erreur 404</p>
       <h1 className="display mt-4 text-[36px] leading-[1.02] md:text-[56px]">
         Cette page n'existe pas.
       </h1>

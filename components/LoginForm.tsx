@@ -62,7 +62,7 @@ export default function LoginForm({
   return (
     <div className="rise w-full max-w-[26rem]">
       <Logo height={34} className="mb-9" priority />
-      <p className="eyebrow text-primaire">{setup ? "Première mise en route" : "Espace recrutement"}</p>
+      <p className="eyebrow text-corail">{setup ? "Première mise en route" : "Espace recrutement"}</p>
       <h1 className="display mt-4 text-[32px] leading-[1.05] md:text-[42px]">
         {setup ? "Créez votre compte" : "Connexion"}
       </h1>
@@ -73,14 +73,14 @@ export default function LoginForm({
       </p>
 
       {storageProblem && (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-primaire/30">
-          <div className="bg-primaire/5 p-4">
-            <p className="eyebrow text-primaire-hover">Configuration à terminer</p>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-corail/40">
+          <div className="bg-corail-pale p-4">
+            <p className="eyebrow text-corail-fonce">Configuration à terminer</p>
             <p className="mt-2 text-[14px] leading-relaxed">{storageProblem}</p>
           </div>
 
           {storageSeen && storageSeen.length > 0 && (
-            <div className="border-t border-primaire/20 bg-wash p-4">
+            <div className="border-t border-corail/30 bg-wash p-4">
               <p className="eyebrow">Ce que le serveur reçoit</p>
               <ul className="mt-2 space-y-1">
                 {storageSeen.map((line) => (
@@ -141,7 +141,7 @@ export default function LoginForm({
         )}
 
         {error && (
-          <p role="alert" className="rounded-xl bg-primaire/10 px-4 py-3 text-[14px] leading-relaxed text-primaire-hover">
+          <p role="alert" className="rounded-xl bg-corail-pale px-4 py-3 text-[14px] leading-relaxed text-corail-fonce">
             {error}
           </p>
         )}

@@ -53,7 +53,7 @@ export default function AdminNav({
           )}
         </div>
       ) : ephemeral ? (
-        <p className="bg-primaire/10 px-5 py-2 text-center text-[12px] font-medium text-primaire-hover md:px-8">
+        <p className="bg-corail-pale px-5 py-2 text-center text-[12px] font-medium text-corail-fonce md:px-8">
           Stockage local temporaire — reliez une base de données pour conserver les dossiers
         </p>
       ) : null}

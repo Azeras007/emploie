@@ -1,0 +1,20 @@
+Logotypes officiels Kiabi
+=========================
+
+Ce dossier est volontairement vide : le dépôt n'embarque aucun fichier de
+marque. En l'absence de logotype, l'application compose « Kiabi » en Figtree
+très gras, au bleu pétrole #040037 (voir components/Logo.tsx).
+
+Pour utiliser le logotype officiel :
+
+  1. déposez le fichier ici, par exemple  public/logos/kiabi.svg
+  2. renseignez son chemin dans le .env  NEXT_PUBLIC_LOGO_FILE=/logos/kiabi.svg
+  3. redémarrez l'application
+
+Le lettrage est alors remplacé partout — en-tête du questionnaire, back-office,
+page de confirmation, page 404 — sans toucher au code.
+
+L'affiche PDF des QR codes (lib/qr.ts) reprend elle aussi ce fichier, à
+condition qu'il soit au format PNG ou JPEG : pdf-lib ne sait pas embarquer de
+SVG. Prévoyez donc, si vous voulez le logotype sur les affiches, une version
+  public/logos/kiabi.png

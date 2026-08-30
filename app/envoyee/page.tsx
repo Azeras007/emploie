@@ -14,7 +14,7 @@ export default async function SentPage({
     <main className="mx-auto flex min-h-dvh max-w-[900px] flex-col justify-center px-5 py-16 md:px-8">
       <div className="rise max-w-measure">
         <Logo height={32} className="mb-8" />
-        <p className="eyebrow text-primaire">Candidature reçue</p>
+        <p className="eyebrow text-corail">Candidature reçue</p>
         <h1 className="display mt-5 text-[38px] leading-[1.02] md:text-[58px]">
           C'est envoyé.
         </h1>

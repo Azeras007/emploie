@@ -3,7 +3,12 @@ node_modules
 out
 .env
 .env*.local
-.data
+
+# Base et documents du mode développement : des CV s'y trouvent. Le joker
+# couvre aussi les copies de travail (.data-archive-…, .data.bak) — un dossier
+# nommé de travers ne doit pas pouvoir emporter un CV dans git.
+.data*
+
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts

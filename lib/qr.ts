@@ -4,10 +4,11 @@ import path from "path";
 import QRCode from "qrcode";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-/** Orange et vert de marque, en composantes 0-1 pour pdf-lib. */
-const ORANGE = rgb(0xf4 / 255, 0x6f / 255, 0x40 / 255);
-const GREEN = rgb(0x23 / 255, 0x47 / 255, 0x37 / 255);
-const GREY = rgb(0x5b / 255, 0x5b / 255, 0x5b / 255);
+/** Bleu pétrole et corail Kiabi, en composantes 0-1 pour pdf-lib. */
+const NAVY = rgb(0x04 / 255, 0x00 / 255, 0x37 / 255);
+const CORAL = rgb(0xff / 255, 0x45 / 255, 0x29 / 255);
+const CORAL_DARK = rgb(0xb5 / 255, 0x31 / 255, 0x1d / 255);
+const GREY = rgb(0x4c / 255, 0x4c / 255, 0x54 / 255);
 
 /**
  * Correction d'erreur maximale (niveau H) : un QR collé sur une vitrine finit
@@ -35,8 +36,8 @@ export interface PosterCopy {
 }
 
 export const DEFAULT_COPY: PosterCopy = {
-  title: "Rejoignez-nous",
-  subtitle: "Nous recrutons. Votre candidature commence ici.",
+  title: "Rejoignez l'équipe",
+  subtitle: "Ce magasin recrute. Votre candidature commence ici.",
   instruction: "Scannez ce code avec l'appareil photo de votre téléphone",
 };
 
@@ -45,18 +46,45 @@ export async function qrSvg(url: string): Promise<string> {
   return QRCode.toString(url, { ...QR_OPTIONS, type: "svg", color: { dark: "#000000", light: "#ffffff" } });
 }
 
-/** QR vectoriel dans l'orange de marque, sur fond transparent. */
+/**
+ * QR vectoriel au bleu de marque, sur fond transparent.
+ *
+ * C'est le bleu pétrole qui sert ici, et non le corail : un lecteur de QR
+ * distingue des modules par leur luminance, et le corail n'en offre pas assez
+ * sur blanc pour être lu de loin ou par mauvaise lumière. Le bleu #040037 est
+ * à un cheveu du noir — la marque est respectée, le code reste lisible.
+ */
 export async function qrSvgBrand(url: string): Promise<string> {
   const svg = await QRCode.toString(url, {
     ...QR_OPTIONS,
     type: "svg",
-    color: { dark: "#f46f40", light: "#0000" },
+    color: { dark: "#040037", light: "#0000" },
   });
   return svg;
 }
 
 export async function qrPng(url: string, width: number): Promise<Buffer> {
   return QRCode.toBuffer(url, { ...QR_OPTIONS, type: "png", width, color: { dark: "#000000", light: "#ffffff" } });
+}
+
+/**
+ * Le logotype officiel, si quelqu'un l'a déposé dans public/logos/.
+ *
+ * pdf-lib ne sait embarquer que du PNG et du JPEG — un SVG, lui, ne peut servir
+ * qu'à l'écran. On essaie donc les deux extensions, et on renonce sans bruit :
+ * une affiche sans logotype reste une affiche utilisable.
+ */
+async function embedLogo(pdf: PDFDocument) {
+  const dir = path.join(process.cwd(), "public", "logos");
+  for (const name of ["kiabi.png", "kiabi.jpg", "kiabi.jpeg"]) {
+    try {
+      const bytes = await fs.readFile(path.join(dir, name));
+      return name.endsWith(".png") ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+    } catch {
+      // Fichier absent ou illisible : on passe au suivant.
+    }
+  }
+  return null;
 }
 
 /** Points PDF (1/72 pouce) des formats ISO. */
@@ -80,41 +108,48 @@ export async function posterPdf(
 
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Candidature — ${url}`);
-  pdf.setCreator("Valeur Ajoutée");
+  pdf.setCreator("Kiabi");
   const page = pdf.addPage([w, h]);
 
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
-
-  // Logotype, s'il est présent dans public/.
-  let cursorY = h - 70 * scale;
-  try {
-    const logoBytes = await fs.readFile(
-      path.join(process.cwd(), "public", "logos", "LOGO-TEXTE.jpg")
-    );
-    const logo = await pdf.embedJpg(logoBytes);
-    const logoW = 190 * scale;
-    const logoH = logoW * (1981 / 5810);
-    page.drawImage(logo, { x: (w - logoW) / 2, y: cursorY - logoH, width: logoW, height: logoH });
-    cursorY -= logoH + 46 * scale;
-  } catch {
-    cursorY -= 10 * scale;
-  }
 
   const center = (text: string, font: typeof bold, size: number, y: number, color = rgb(0, 0, 0)) => {
     const width = font.widthOfTextAtSize(text, size);
     page.drawText(text, { x: (w - width) / 2, y, size, font, color });
   };
 
+  // Logotype officiel s'il a été déposé, sinon le lettrage — le même repli que
+  // components/Logo.tsx, pour que l'affiche et l'écran se ressemblent.
+  let cursorY = h - 70 * scale;
+  const logo = await embedLogo(pdf);
+  if (logo) {
+    const logoW = 190 * scale;
+    const logoH = logoW * (logo.height / logo.width);
+    page.drawImage(logo, { x: (w - logoW) / 2, y: cursorY - logoH, width: logoW, height: logoH });
+    cursorY -= logoH + 46 * scale;
+  } else {
+    const markSize = 34 * scale;
+    const markWidth = bold.widthOfTextAtSize("KIABI", markSize);
+    page.drawText("KIABI", {
+      x: (w - markWidth) / 2,
+      y: cursorY - markSize,
+      size: markSize,
+      font: bold,
+      color: NAVY,
+    });
+    cursorY -= markSize + 46 * scale;
+  }
+
   const titleSize = 30 * scale;
-  center(copy.title, bold, titleSize, cursorY - titleSize, GREEN);
+  center(copy.title, bold, titleSize, cursorY - titleSize, NAVY);
   cursorY -= titleSize + 20 * scale;
 
   const subSize = 13 * scale;
   center(copy.subtitle, regular, subSize, cursorY - subSize, GREY);
   cursorY -= subSize + 42 * scale;
 
-  // Le QR, cadré dans un liseré orange.
+  // Le QR, cadré dans un liseré corail.
   const qrSize = (format === "a4" ? 280 : 210);
   const pad = 16 * scale;
   const boxX = (w - qrSize) / 2 - pad;
@@ -124,7 +159,7 @@ export async function posterPdf(
     y: boxY,
     width: qrSize + pad * 2,
     height: qrSize + pad * 2,
-    borderColor: ORANGE,
+    borderColor: CORAL,
     borderWidth: 2,
     color: rgb(1, 1, 1),
   });
@@ -140,7 +175,7 @@ export async function posterPdf(
   // L'adresse en clair : le repli quand le scan échoue.
   const urlSize = 12 * scale;
   const pretty = url.replace(/^https?:\/\//, "");
-  center(pretty, bold, urlSize, cursorY, ORANGE);
+  center(pretty, bold, urlSize, cursorY, CORAL_DARK);
 
   return pdf.save();
 }
