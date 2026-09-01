@@ -22,7 +22,7 @@ export function Score({ percent, disqualified }: { percent: number; disqualified
       <span
         className={clsx(
           "text-[13px] font-semibold tabular-nums",
-          disqualified ? "text-custom2 line-through" : "text-black"
+          disqualified ? "text-custom2 line-through" : "text-ink"
         )}
       >
         {percent}
@@ -41,10 +41,10 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
  * sur du texte de 13 px.
  */
 const STATUS_STYLE: Record<Status, string> = {
-  nouveau: "border-custom3 bg-white text-custom1",
+  nouveau: "border-custom3 bg-paper text-custom1",
   en_revue: "border-corail/40 bg-corail-pale text-corail-fonce",
-  entretien: "border-primaire bg-primaire text-white",
-  retenu: "border-secondaire bg-secondaire text-white",
+  entretien: "border-primaire bg-primaire text-sur-primaire",
+  retenu: "border-secondaire bg-secondaire text-sur-secondaire",
   refuse: "border-custom3 bg-wash text-custom2",
 };
 
@@ -69,7 +69,7 @@ export function StatusDot({ status }: { status: Status }) {
 
 export function Empty({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-s border border-dashed border-custom3 bg-wash px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-carte border border-dashed border-custom3 bg-wash px-6 py-16 text-center">
       <p className="display text-[20px]">{title}</p>
       <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-custom1">{body}</p>
       {action ? <div className="mt-6">{action}</div> : null}

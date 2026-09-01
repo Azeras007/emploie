@@ -103,7 +103,7 @@ export default function PipelineClient({
       </div>
 
       {/* Filtres */}
-      <div className="mt-8 rounded-2xl border border-custom3 bg-wash p-4 md:p-5">
+      <div className="mt-8 rounded-carte border border-custom3 bg-wash p-4 md:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <input
             className="field max-w-full lg:max-w-[22rem]"
@@ -136,7 +136,7 @@ export default function PipelineClient({
           <label className="ml-auto flex items-center gap-2">
             <span className="eyebrow">Trier par</span>
             <select
-              className="rounded-full border border-custom3 bg-white px-3 py-1.5 text-[13px] font-semibold outline-none transition-colors focus:border-primaire"
+              className="rounded-full border border-custom3 bg-paper px-3 py-1.5 text-[13px] font-semibold outline-none transition-colors focus:border-primaire"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
             >
@@ -169,7 +169,7 @@ export default function PipelineClient({
           </p>
 
           {/* Desktop */}
-          <div className="mt-3 hidden overflow-hidden rounded-2xl border border-custom3 md:block">
+          <div className="mt-3 hidden overflow-hidden rounded-carte border border-custom3 md:block">
             <div className="grid grid-cols-[1.25rem_6.5rem_minmax(0,1fr)_9rem_6.5rem_4.5rem] items-center gap-4 border-b border-custom3 bg-wash px-5 py-3">
               <span />
               <span className="eyebrow">Réf</span>
@@ -220,7 +220,7 @@ export default function PipelineClient({
               <li key={a.id}>
                 <Link
                   href={`/admin/candidats/${a.id}`}
-                  className="block rounded-2xl border border-custom3 bg-white p-4 shadow-soft transition-colors active:bg-primaire/5"
+                  className="block rounded-carte border border-custom3 bg-paper p-4 shadow-soft transition-colors active:bg-primaire/5"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[11px] font-semibold tracking-[0.02em] text-custom2">{a.ref}</span>
@@ -283,8 +283,8 @@ function Chip({
       className={clsx(
         "rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
         active
-          ? "border-primaire bg-primaire text-white"
-          : "border-custom3 bg-white text-custom1 hover:border-primaire hover:text-primaire"
+          ? "border-primaire bg-primaire text-sur-primaire"
+          : "border-custom3 bg-paper text-custom1 hover:border-primaire hover:text-primaire"
       )}
     >
       {children}
@@ -313,7 +313,7 @@ function Toggle({
         aria-hidden="true"
         className={clsx(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors",
-          checked ? "border-primaire bg-primaire" : "border-custom3 bg-white"
+          checked ? "border-primaire bg-primaire" : "border-custom3 bg-paper"
         )}
       >
         {checked && (

@@ -24,7 +24,7 @@ export default async function SentPage({
         </p>
 
         {ref && (
-          <div className="mt-10 inline-flex items-center gap-4 rounded-2xl border border-custom3 bg-wash px-5 py-4">
+          <div className="mt-10 inline-flex items-center gap-4 rounded-carte border border-custom3 bg-wash px-5 py-4">
             <span className="eyebrow">Référence</span>
             <span className="text-[18px] font-bold tracking-[0.04em] text-primaire">{ref}</span>
           </div>

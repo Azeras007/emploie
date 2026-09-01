@@ -73,7 +73,7 @@ export default function LoginForm({
       </p>
 
       {storageProblem && (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-corail/40">
+        <div className="mt-8 overflow-hidden rounded-carte border border-corail/40">
           <div className="bg-corail-pale p-4">
             <p className="eyebrow text-corail-fonce">Configuration à terminer</p>
             <p className="mt-2 text-[14px] leading-relaxed">{storageProblem}</p>
@@ -141,7 +141,7 @@ export default function LoginForm({
         )}
 
         {error && (
-          <p role="alert" className="rounded-xl bg-corail-pale px-4 py-3 text-[14px] leading-relaxed text-corail-fonce">
+          <p role="alert" className="rounded-champ bg-corail-pale px-4 py-3 text-[14px] leading-relaxed text-corail-fonce">
             {error}
           </p>
         )}

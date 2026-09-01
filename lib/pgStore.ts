@@ -435,6 +435,27 @@ export async function getSettings(pool: Pool): Promise<Settings | null> {
   return rows[0]?.data ?? null;
 }
 
+/**
+ * Le thème de l'enseigne, rangé dans la même table que les réglages sous une
+ * autre clé. Une table de plus pour un unique document JSON n'aurait rien
+ * apporté — et celle-ci existe déjà, avec sa date de modification.
+ */
+export async function getTheme(pool: Pool): Promise<unknown | null> {
+  const { rows } = await pool.query<{ data: unknown }>(
+    `select data from "RecruitmentSetting" where id = 'theme'`
+  );
+  return rows[0]?.data ?? null;
+}
+
+export async function saveTheme(pool: Pool, theme: unknown): Promise<void> {
+  await pool.query(
+    `insert into "RecruitmentSetting" (id, data, "updatedAt")
+     values ('theme', $1, now())
+     on conflict (id) do update set data = excluded.data, "updatedAt" = now()`,
+    [JSON.stringify(theme)]
+  );
+}
+
 export async function saveSettings(pool: Pool, settings: Settings): Promise<Settings> {
   await pool.query(
     `insert into "RecruitmentSetting" (id, data, "updatedAt")

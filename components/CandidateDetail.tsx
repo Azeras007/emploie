@@ -109,7 +109,7 @@ export default function CandidateDetail({
       </Link>
 
       {/* Entête du dossier */}
-      <header className="mt-5 rounded-2xl border border-custom3 bg-white p-5 shadow-soft md:p-7">
+      <header className="mt-5 rounded-carte border border-custom3 bg-paper p-5 shadow-soft md:p-7">
         <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
           <div className="min-w-0">
             <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-custom2">
@@ -171,8 +171,8 @@ export default function CandidateDetail({
                 className={clsx(
                   "rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
                   status === s.value
-                    ? "border-primaire bg-primaire text-white"
-                    : "border-custom3 bg-white text-custom1 hover:border-primaire hover:text-primaire"
+                    ? "border-primaire bg-primaire text-sur-primaire"
+                    : "border-custom3 bg-paper text-custom1 hover:border-primaire hover:text-primaire"
                 )}
               >
                 {s.label}
@@ -192,7 +192,7 @@ export default function CandidateDetail({
       </header>
 
       {/* Onglets mobile */}
-      <div className="sticky top-[57px] z-10 -mx-5 mt-4 border-b border-custom3 bg-white px-5 md:hidden">
+      <div className="sticky top-[57px] z-10 -mx-5 mt-4 border-b border-custom3 bg-paper px-5 md:hidden">
         <div className="flex">
           {(["reponses", "documents"] as const).map((key) => (
             <button
@@ -215,7 +215,7 @@ export default function CandidateDetail({
         <section className={clsx("min-w-0", tab === "reponses" ? "block" : "hidden", "md:block")}>
           <h2 className="eyebrow">Le questionnaire</h2>
 
-          <dl className="mt-4 overflow-hidden rounded-2xl border border-custom3 bg-white">
+          <dl className="mt-4 overflow-hidden rounded-carte border border-custom3 bg-paper">
             {answered.map((q, i) => (
               <AnswerRow
                 key={q.id}
@@ -238,7 +238,7 @@ export default function CandidateDetail({
 
           {/* Détail du score */}
           <h2 className="eyebrow mt-10">Pourquoi ce score</h2>
-          <ul className="mt-4 overflow-hidden rounded-2xl border border-custom3 bg-white">
+          <ul className="mt-4 overflow-hidden rounded-carte border border-custom3 bg-paper">
             {score.reasons.length === 0 && (
               <li className="px-4 py-4 text-[14px] text-custom1">
                 Aucun critère actif. Définissez-en dans les réglages.
@@ -257,7 +257,7 @@ export default function CandidateDetail({
                     aria-hidden="true"
                     className={clsx(
                       "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
-                      good ? "bg-secondaire text-white" : "bg-wash text-custom2"
+                      good ? "bg-secondaire text-sur-secondaire" : "bg-wash text-custom2"
                     )}
                   >
                     {good ? "✓" : "×"}

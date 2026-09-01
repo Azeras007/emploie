@@ -43,7 +43,7 @@ export default function QrPanel({
       </button>
 
       {open && (
-        <div className="mt-3 overflow-hidden rounded-2xl border border-custom3">
+        <div className="mt-3 overflow-hidden rounded-carte border border-custom3">
           <div className="flex flex-col gap-5 p-4 sm:flex-row sm:items-start md:p-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -51,7 +51,7 @@ export default function QrPanel({
               alt={`QR code vers ${url}`}
               width={148}
               height={148}
-              className="h-[148px] w-[148px] shrink-0 rounded-xl border border-custom3 bg-white p-2"
+              className="h-[148px] w-[148px] shrink-0 rounded-champ border border-custom3 bg-paper p-2"
             />
 
             <div className="min-w-0 flex-1">

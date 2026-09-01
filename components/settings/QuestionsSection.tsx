@@ -72,7 +72,7 @@ export default function QuestionsSection({
               <div className="flex items-center justify-between gap-2 border-b border-rule2 pb-3">
                 <span className="text-[11px] tabular-nums text-custom1">
                   {String(i + 1).padStart(2, "0")}
-                  <span className="ml-3 normal-case text-black">{q.id || "identifiant à générer"}</span>
+                  <span className="ml-3 normal-case text-ink">{q.id || "identifiant à générer"}</span>
                 </span>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <SquareBtn title="Monter" onClick={() => move(i, -1)} disabled={i === 0}>

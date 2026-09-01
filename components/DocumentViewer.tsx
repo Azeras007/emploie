@@ -126,8 +126,8 @@ export default function DocumentViewer({
                 "-mb-px flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4",
                 "text-[13px] font-semibold transition-colors duration-150",
                 i === index
-                  ? "border-primaire text-black"
-                  : "border-transparent text-custom1 hover:text-black"
+                  ? "border-primaire text-ink"
+                  : "border-transparent text-custom1 hover:text-ink"
               )}
             >
               {KIND_LABELS[f.kind]}
@@ -162,10 +162,10 @@ export default function DocumentViewer({
               <iframe
                 src={url}
                 title={file.name}
-                className="min-h-0 w-full flex-1 border-0 bg-white"
+                className="min-h-0 w-full flex-1 border-0 bg-paper"
               />
               {/* Repli 2 : ni objet ni iframe — il ne reste que le téléchargement. */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-custom3 bg-white px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-custom3 bg-paper px-4 py-3">
                 <p className="text-[13px] leading-snug text-custom1">
                   Ce navigateur n&apos;affiche pas les PDF en ligne.
                 </p>
@@ -189,7 +189,7 @@ export default function DocumentViewer({
         ) : null}
 
         {preview.mode === "html" ? (
-          <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-white px-5 py-6 sm:px-8 sm:py-8">
+          <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-paper px-5 py-6 sm:px-8 sm:py-8">
             <div
               className="doc-render mx-auto max-w-measure break-words"
               dangerouslySetInnerHTML={{ __html: preview.html ?? "" }}
@@ -198,7 +198,7 @@ export default function DocumentViewer({
         ) : null}
 
         {preview.mode === "text" ? (
-          <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-white px-5 py-6 sm:px-8 sm:py-8">
+          <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-paper px-5 py-6 sm:px-8 sm:py-8">
             <pre className="mx-auto max-w-measure whitespace-pre-wrap break-words text-[12.5px] leading-[1.7]">
               {preview.text}
             </pre>
@@ -207,7 +207,7 @@ export default function DocumentViewer({
 
         {preview.mode === "unsupported" ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-wash px-6 py-10 text-center">
-            <span className="border border-custom3 bg-white px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-custom1">
+            <span className="border border-custom3 bg-paper px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-custom1">
               {format.ext || "fichier"}
             </span>
             <p className="display text-[18px]">Aperçu indisponible</p>

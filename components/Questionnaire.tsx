@@ -266,7 +266,7 @@ export default function Questionnaire({
       </main>
 
       {/* Barre d'action */}
-      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-custom3 bg-white">
+      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-custom3 bg-paper">
         <div className="mx-auto flex max-w-[900px] items-center justify-between gap-3 px-5 py-3.5 md:px-8">
           <button
             type="button"
@@ -336,7 +336,7 @@ function IdentityStep({
       </p>
 
       {uploadsProblem && (
-        <div className="mt-8 rounded-2xl border border-corail/40 bg-corail-pale p-4">
+        <div className="mt-8 rounded-carte border border-corail/40 bg-corail-pale p-4">
           <p className="eyebrow text-corail-fonce">Dépôt de documents indisponible</p>
           <p className="mt-2 text-[14px] leading-relaxed">
             Le CV ne peut pas être reçu pour le moment. Prévenez votre contact plutôt que de
@@ -481,10 +481,10 @@ function AnswerInput({
                 }}
                 aria-pressed={selected}
                 className={clsx(
-                  "flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-left text-[16px] transition-colors",
+                  "flex w-full items-center gap-3.5 rounded-champ border px-4 py-3.5 text-left text-[16px] transition-colors",
                   selected
                     ? "border-primaire bg-primaire/10 font-semibold text-primaire-hover"
-                    : "border-custom3 bg-white hover:border-primaire/50 hover:bg-primaire/5"
+                    : "border-custom3 bg-paper hover:border-primaire/50 hover:bg-primaire/5"
                 )}
               >
                 <span
@@ -522,10 +522,10 @@ function AnswerInput({
                   }
                   aria-pressed={selected}
                   className={clsx(
-                    "flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-left text-[16px] transition-colors",
+                    "flex w-full items-center gap-3.5 rounded-champ border px-4 py-3.5 text-left text-[16px] transition-colors",
                     selected
                       ? "border-primaire bg-primaire/10 font-semibold text-primaire-hover"
-                      : "border-custom3 bg-white hover:border-primaire/50 hover:bg-primaire/5"
+                      : "border-custom3 bg-paper hover:border-primaire/50 hover:bg-primaire/5"
                   )}
                 >
                   <span
@@ -570,8 +570,8 @@ function AnswerInput({
             className={clsx(
               "h-12 w-12 rounded-full border text-[15px] font-semibold tabular-nums transition-colors",
               value === n
-                ? "border-primaire bg-primaire text-white"
-                : "border-custom3 bg-white hover:border-primaire hover:text-primaire"
+                ? "border-primaire bg-primaire text-sur-primaire"
+                : "border-custom3 bg-paper hover:border-primaire hover:text-primaire"
             )}
           >
             {n}
@@ -729,7 +729,7 @@ function Dropzone({
           handleFiles(e.dataTransfer.files);
         }}
         className={clsx(
-          "mt-2 rounded-2xl border-2 border-dashed transition-colors",
+          "mt-2 rounded-carte border-2 border-dashed transition-colors",
           over ? "border-primaire bg-primaire/5" : "border-custom3 bg-wash"
         )}
       >
@@ -761,7 +761,7 @@ function Dropzone({
           {mine.map((u) => (
             <li
               key={u.localId}
-              className="flex items-center gap-3 rounded-xl border border-custom3 bg-white px-4 py-3 text-[14px]"
+              className="flex items-center gap-3 rounded-champ border border-custom3 bg-paper px-4 py-3 text-[14px]"
             >
               <span className="min-w-0 flex-1 truncate">{u.name}</span>
               <span
@@ -790,7 +790,7 @@ function Dropzone({
       )}
 
       {mine.some((u) => u.state === "erreur") && (
-        <p className="mt-2 rounded-xl bg-corail-pale px-3 py-2 text-[13px] text-corail-fonce">
+        <p className="mt-2 rounded-champ bg-corail-pale px-3 py-2 text-[13px] text-corail-fonce">
           {mine.find((u) => u.state === "erreur")?.error}
         </p>
       )}
@@ -825,7 +825,7 @@ function ReviewStep({
         Tout est modifiable : touchez une ligne pour y revenir.
       </p>
 
-      <dl className="mt-8 overflow-hidden rounded-2xl border border-custom3 bg-white">
+      <dl className="mt-8 overflow-hidden rounded-carte border border-custom3 bg-paper">
         <ReviewRow label="Vous" onClick={() => onJump(0)}>
           {identity.firstName} {identity.lastName}
           <br />

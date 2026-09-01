@@ -146,7 +146,7 @@ export default function AccountSection({
       <header className="max-w-measure">
         <h2 className="display text-[24px] leading-tight md:text-[28px]">Compte &amp; liens</h2>
         <p className="mt-2 text-[14px] leading-relaxed text-custom1">
-          Connecté en tant que <span className="text-[13px] text-black">{username}</span>.
+          Connecté en tant que <span className="text-[13px] text-ink">{username}</span>.
         </p>
       </header>
 
@@ -188,7 +188,7 @@ export default function AccountSection({
           </div>
         ) : null}
 
-        <div className="mt-6 rounded-2xl border border-custom3 bg-wash p-4 md:p-5">
+        <div className="mt-6 rounded-carte border border-custom3 bg-wash p-4 md:p-5">
           <p className="text-[15px] font-semibold">Questionnaire général</p>
           <p className="mt-1 break-all text-[11px] leading-snug text-custom1">
             {candidatureUrl(publicBaseUrl)}

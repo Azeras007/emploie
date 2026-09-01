@@ -2,37 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─────────────────────────────────────────────────────────────
- * DESIGN TOKENS — système de design Kiabi.
- *
- * Bleu pétrole (#040037) pour les actions et la structure, corail (#ff4529)
- * pour les accents, gris neutres légèrement bleutés. Pour changer l'identité
- * visuelle, modifier uniquement ces hex — et leurs jumeaux dans
- * tailwind.config.ts.
- * ───────────────────────────────────────────────────────────── */
 :root {
-  --primaire: #040037;
-  --primaire-hover: #36335f;
-  --primaire-pale: #e6e6eb;
-  --corail: #ff4529;
-  --corail-pale: #ffecea;
-  --corail-fonce: #b5311d;
-  --jaune: #ffda00;
-  --secondaire: #00565a;
-  --terciaire: #ffffff;
-  --black: #131314;
-  --white: #ffffff;
-  --custom1: #4c4c54;
-  --custom2: #87878c;
-  --custom3: #e2e2e4;
+  /* ─────────────────────────────────────────────────────────────
+   * Valeurs de repli — le thème par défaut du produit.
+   *
+   * En marche normale, app/layout.tsx injecte le thème de l'enseigne, lu en
+   * base, et écrase ce bloc. Ces valeurs servent quand rien n'a encore été
+   * configuré, et surtout quand la base ne répond pas : une page d'erreur non
+   * stylée est le pire moment pour perdre l'identité visuelle.
+   *
+   * Les couleurs sont en canaux séparés, jamais en hex : voir tailwind.config.ts.
+   * ───────────────────────────────────────────────────────────── */
+  --primaire: 20 27 52;
+  --primaire-hover: 67 73 93;
+  --primaire-pale: 236 237 239;
+  --sur-primaire: 255 255 255;
+  --corail: 255 92 53;
+  --corail-pale: 255 239 235;
+  --corail-fonce: 204 74 42;
+  --secondaire: 15 118 110;
+  --sur-secondaire: 255 255 255;
+  --custom1: 74 75 83;
+  --custom2: 132 132 137;
+  --custom3: 220 220 223;
+  --wash: 243 244 244;
+  --ink: 18 20 28;
+  --paper: 255 255 255;
+  --succes: 23 125 53;
+  --danger: 200 16 46;
 
-  --background: var(--terciaire);
-  --foreground: var(--black);
-  --panel: var(--white);
-  --stroke: var(--custom3);
-  --muted: var(--custom1);
-  --accent: var(--corail);
-  --accent-hover: var(--corail-fonce);
+  --rayon-champ: 12px;
+  --rayon-carte: 16px;
+
+  --police-titre: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+  --police-texte: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.08);
   --shadow: 0 1px 4px 0 rgb(0 0 0 / 0.1);
@@ -48,18 +51,18 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    background: rgb(var(--paper));
+    color: rgb(var(--ink));
+    font-family: var(--police-texte);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   ::selection {
-    background: var(--primaire);
-    color: var(--white);
+    background: rgb(var(--primaire));
+    color: rgb(var(--sur-primaire));
   }
   :focus-visible {
-    outline: 2px solid var(--primaire);
+    outline: 2px solid rgb(var(--primaire));
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -75,7 +78,7 @@
   input[type="checkbox"],
   input[type="radio"],
   progress {
-    accent-color: var(--primaire);
+    accent-color: rgb(var(--primaire));
   }
   /* iOS zoome sur les champs sous 16px. */
   @media (max-width: 767px) {
@@ -95,35 +98,35 @@
 
   /* Titres Kiabi : Figtree en gras appuyé, jamais de serif. */
   .display {
-    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--police-titre);
     font-weight: 800;
     letter-spacing: -0.02em;
   }
 
   /* Champs aux angles généreux, comme les cartes du site. */
   .field {
-    @apply w-full rounded-[12px] border border-custom3 bg-white px-4 py-3 text-[15px]
+    @apply w-full rounded-champ border border-custom3 bg-paper px-4 py-3 text-[15px]
            outline-none transition-colors placeholder:text-custom2
            focus:border-primaire;
   }
 
   .box {
-    @apply w-full rounded-[12px] border border-custom3 bg-white px-4 py-3 text-[15px]
+    @apply w-full rounded-champ border border-custom3 bg-paper px-4 py-3 text-[15px]
            outline-none transition-colors placeholder:text-custom2
            focus:border-primaire;
   }
 
   .btn {
     @apply inline-flex select-none items-center justify-center gap-2 rounded-full
-           bg-primaire px-6 py-3 text-sm font-bold text-white transition-colors
+           bg-primaire px-6 py-3 text-sm font-bold text-sur-primaire transition-colors
            hover:bg-primaire-hover disabled:cursor-not-allowed disabled:opacity-40
            disabled:hover:bg-primaire;
   }
 
   .btn-ghost {
     @apply inline-flex select-none items-center justify-center gap-2 rounded-full
-           border border-custom3 bg-white px-5 py-2.5 text-sm font-bold text-primaire
-           transition-colors hover:border-primaire hover:bg-primaire hover:text-white
+           border border-custom3 bg-paper px-5 py-2.5 text-sm font-bold text-primaire
+           transition-colors hover:border-primaire hover:bg-primaire hover:text-sur-primaire
            disabled:opacity-40;
   }
 
@@ -133,7 +136,7 @@
   }
 
   .card {
-    @apply rounded-s border border-custom3 bg-white;
+    @apply rounded-carte border border-custom3 bg-paper;
   }
 
   .pill {
@@ -153,22 +156,22 @@
   width: 6px;
   height: 14px;
   border-radius: 999px;
-  background: var(--custom3);
+  background: rgb(var(--custom3));
 }
 .gauge i[data-on="1"] {
-  background: var(--corail);
+  background: rgb(var(--corail));
 }
 
 /* Filet de progression du questionnaire. */
 .progress {
   height: 3px;
-  background: var(--custom3);
+  background: rgb(var(--custom3));
 }
 .progress > span {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--corail);
+  background: rgb(var(--corail));
   transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -211,7 +214,7 @@
 .doc-render h1,
 .doc-render h2,
 .doc-render h3 {
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--police-titre);
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 1.4em 0 0.5em;
@@ -224,8 +227,8 @@
 .doc-render ol { margin: 0 0 0.85em 1.15em; list-style: disc; }
 .doc-render ol { list-style: decimal; }
 .doc-render li { margin-bottom: 0.3em; }
-.doc-render a { color: var(--primaire); text-decoration: underline; text-underline-offset: 3px; }
+.doc-render a { color: rgb(var(--primaire)); text-decoration: underline; text-underline-offset: 3px; }
 .doc-render table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
 .doc-render td,
-.doc-render th { border: 1px solid var(--stroke); padding: 6px 8px; text-align: left; }
+.doc-render th { border: 1px solid rgb(var(--custom3)); padding: 6px 8px; text-align: left; }
 .doc-render img { max-width: 100%; height: auto; border-radius: 8px; }

@@ -4,6 +4,7 @@ import path from "path";
 import { DEFAULT_SETTINGS } from "./defaults";
 import * as pg from "./pgStore";
 import { MIGRATION_HINT } from "./schema";
+import { normaliserTheme, THEME_PAR_DEFAUT, type Theme } from "./theme";
 import { filesReport } from "./storage";
 import type { Applicant, Invite, Settings, User } from "./types";
 
@@ -387,6 +388,61 @@ export async function getSettings(): Promise<Settings> {
     questions: stored.questions?.length ? stored.questions : DEFAULT_SETTINGS.questions,
     rules: stored.rules ?? DEFAULT_SETTINGS.rules,
   };
+}
+
+/* ---- thème ---- */
+
+/**
+ * Le thème est lu à chaque rendu de page. Un aller-retour en base par requête
+ * serait du gaspillage pour un document qui change une fois par trimestre : on
+ * le garde en mémoire trente secondes, et la sauvegarde vide le cache
+ * elle-même pour que l'aperçu soit immédiat.
+ *
+ * Trente secondes, et non « pour toujours » : plusieurs processus PM2 peuvent
+ * servir la même application, et seul celui qui a enregistré connaît le
+ * changement. Le délai borne l'écart.
+ */
+let themeCache: { valeur: Theme; expire: number } | null = null;
+const THEME_TTL = 30_000;
+
+export function oublierTheme(): void {
+  themeCache = null;
+}
+
+export async function getTheme(): Promise<Theme> {
+  if (themeCache && themeCache.expire > Date.now()) return themeCache.valeur;
+
+  let brut: unknown = null;
+  try {
+    if (DB_DRIVER === "postgres") {
+      brut = await pg.getTheme(await getPool());
+    } else {
+      const db = await readFileDb();
+      brut = db.meta.theme ?? null;
+    }
+  } catch (err) {
+    // Un thème illisible ne doit jamais empêcher une page de s'afficher :
+    // l'application reprend ses couleurs par défaut et continue.
+    console.error("Lecture du thème impossible, thème par défaut utilisé", err);
+    return structuredClone(THEME_PAR_DEFAUT);
+  }
+
+  const theme = normaliserTheme(brut as Partial<Theme> | null);
+  themeCache = { valeur: theme, expire: Date.now() + THEME_TTL };
+  return theme;
+}
+
+export async function saveTheme(theme: Theme): Promise<Theme> {
+  const propre = normaliserTheme(theme);
+  if (DB_DRIVER === "postgres") {
+    await pg.saveTheme(await getPool(), propre);
+  } else {
+    await mutateFileDb((db) => {
+      db.meta.theme = propre;
+    });
+  }
+  themeCache = { valeur: propre, expire: Date.now() + THEME_TTL };
+  return propre;
 }
 
 export async function saveSettings(settings: Settings): Promise<Settings> {

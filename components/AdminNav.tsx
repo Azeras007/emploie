@@ -39,8 +39,11 @@ export default function AdminNav({
 
   return (
     <>
+      {/* Rouge et non vert : ce bandeau annonce une panne de stockage, pas un
+          profil retenu. Le `danger` de la palette est fixe — il ne suit pas la
+          charte du client — donc le texte blanc y est toujours lisible. */}
       {problem ? (
-        <div className="bg-secondaire px-5 py-3 md:px-8">
+        <div className="bg-danger px-5 py-3 md:px-8">
           <p className="mx-auto max-w-[1180px] text-[13px] leading-relaxed text-white">{problem}</p>
           {seen && seen.length > 0 && (
             <ul className="mx-auto mt-1.5 flex max-w-[1180px] flex-wrap gap-x-5 gap-y-0.5">
@@ -58,7 +61,7 @@ export default function AdminNav({
         </p>
       ) : null}
 
-      <header className="sticky top-0 z-30 border-b border-custom3 bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-custom3 bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1180px] items-center gap-5 px-5 py-3 md:px-8">
           <Logo href="/admin" height={26} className="sm:hidden" priority />
           <Logo href="/admin" height={30} className="hidden sm:inline-flex" priority />

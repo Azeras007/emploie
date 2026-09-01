@@ -138,7 +138,7 @@ export default function SettingsClient({
               onClick={() => setTab(t.id)}
               className={clsx(
                 "min-h-[44px] shrink-0 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[13px] font-semibold transition-colors",
-                tab === t.id ? "border-primaire text-black" : "border-transparent text-custom1 hover:text-black"
+                tab === t.id ? "border-primaire text-ink" : "border-transparent text-custom1 hover:text-ink"
               )}
             >
               {t.label}
@@ -251,7 +251,7 @@ export default function SettingsClient({
 
       {/* ---------- Barre d'enregistrement collante ---------- */}
       {dirty || savedFlash || error ? (
-        <div className="sticky bottom-0 z-20 -mx-5 mt-12 border-t border-custom3 bg-white/95 px-5 py-3.5 backdrop-blur md:-mx-8 md:px-8">
+        <div className="sticky bottom-0 z-20 -mx-5 mt-12 border-t border-custom3 bg-paper/95 px-5 py-3.5 backdrop-blur md:-mx-8 md:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               {error ? (

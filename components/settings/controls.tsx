@@ -59,7 +59,7 @@ export function Check({
       <span
         className={clsx(
           "grid h-[18px] w-[18px] shrink-0 place-items-center border border-primaire transition-colors",
-          checked ? "bg-primaire text-white" : "bg-white"
+          checked ? "bg-primaire text-sur-primaire" : "bg-paper"
         )}
       >
         {checked ? (
@@ -95,7 +95,7 @@ export function SquareBtn({
       disabled={disabled}
       title={title}
       aria-label={title}
-      className="grid h-11 w-11 shrink-0 place-items-center border border-custom3 bg-white text-[13px]
+      className="grid h-11 w-11 shrink-0 place-items-center border border-custom3 bg-paper text-[13px]
                  transition-colors hover:border-primaire disabled:opacity-25 disabled:hover:border-custom3"
     >
       {children}
@@ -131,7 +131,7 @@ export function ConfirmButton({
       }}
       className={clsx(
         "inline-flex min-h-[44px] select-none items-center px-2 text-[13px] font-semibold transition-colors",
-        armed ? "text-black underline underline-offset-4" : "text-custom1 hover:text-black",
+        armed ? "text-ink underline underline-offset-4" : "text-custom1 hover:text-ink",
         className
       )}
     >
@@ -146,7 +146,7 @@ export function Notice({ kind, children }: { kind: "error" | "ok"; children: Rea
     <p
       className={clsx(
         "border-l-2 py-1 pl-3 text-[11px] uppercase leading-[1.6] tracking-[0.12em]",
-        kind === "error" ? "border-primaire text-black" : "border-custom3 text-custom1"
+        kind === "error" ? "border-primaire text-ink" : "border-custom3 text-custom1"
       )}
     >
       {children}

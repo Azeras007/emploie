@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kiabi">
-  <!-- Marque de repli, en attendant les fichiers officiels : carré aux angles
-       généreux du système Kiabi, au bleu pétrole #040037. -->
-  <rect width="512" height="512" rx="128" fill="#040037"/>
-  <g transform="translate(-8 0)">
-    <path d="M150 140 h54 v92 l96 -92 h72 l-116 112 l122 120 h-74 l-100 -100 v100 h-54 z" fill="#ffffff"/>
-  </g>
-</svg>
