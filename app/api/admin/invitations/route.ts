@@ -9,6 +9,14 @@ export const dynamic = "force-dynamic";
 
 const createSchema = z.object({
   label: z.string().max(120, "Libellé trop long (120 caractères maximum).").nullish(),
+  /**
+   * Le magasin auquel ce lien rattache les candidatures.
+   *
+   * C'est ce qui donne son sens au QR de devanture : celui collé à Lille
+   * dépose dans la liste de Lille, sans que le candidat ait à choisir un
+   * magasin dans une liste de trente.
+   */
+  storeId: z.string().nullish(),
 });
 
 /** Chaque appel renvoie sa propre réponse : on ne réutilise pas un objet Response. */
@@ -53,6 +61,7 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString(),
     uses: 0,
     active: true,
+    storeId: (parsed.data.storeId ?? "").trim() || null,
   };
 
   await saveInvite(invite);

@@ -5,9 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { scoreApplicant } from "@/lib/scoring";
+import { peut, type Permission } from "@/lib/permissions";
 import type { Theme } from "@/lib/theme";
-import type { Applicant, Invite, Question, Settings } from "@/lib/types";
+import type { Applicant, Invite, Question, Role, Settings, Store } from "@/lib/types";
 import AccountSection from "./AccountSection";
+import ConformiteSection from "./ConformiteSection";
+import EquipeSection, { type CompteVue } from "./EquipeSection";
 import MarqueSection from "./MarqueSection";
 import QuestionsSection from "./QuestionsSection";
 import RulesSection, { type RulesPreview } from "./RulesSection";
@@ -16,14 +19,21 @@ import { Field, Notice } from "./controls";
 /** Projection minimale d'une candidature : de quoi simuler le score, rien de plus. */
 export type PreviewApplicant = Pick<Applicant, "id" | "identity" | "answers" | "files">;
 
-type TabId = "marque" | "poste" | "questionnaire" | "tri" | "compte";
+type TabId = "marque" | "poste" | "questionnaire" | "tri" | "equipe" | "donnees" | "compte";
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "marque", label: "Marque" },
-  { id: "poste", label: "Poste & accueil" },
-  { id: "questionnaire", label: "Questionnaire" },
-  { id: "tri", label: "Tri & pertinence" },
-  { id: "compte", label: "Compte & liens" },
+/**
+ * Chaque onglet déclare la permission qu'il exige. Un onglet qu'on n'a pas le
+ * droit d'ouvrir n'est pas affiché — plutôt que de mener à un écran qui
+ * refusera, ou pire, qui s'afficherait à moitié.
+ */
+const TABS: { id: TabId; label: string; permission: Permission }[] = [
+  { id: "marque", label: "Marque", permission: "marque" },
+  { id: "poste", label: "Poste & accueil", permission: "reglages" },
+  { id: "questionnaire", label: "Questionnaire", permission: "reglages" },
+  { id: "tri", label: "Tri & pertinence", permission: "reglages" },
+  { id: "equipe", label: "Équipe & magasins", permission: "comptes" },
+  { id: "donnees", label: "Données & e-mails", permission: "donnees" },
+  { id: "compte", label: "Compte & liens", permission: "liens" },
 ];
 
 export default function SettingsClient({
@@ -31,17 +41,43 @@ export default function SettingsClient({
   initialInvites,
   initialTheme,
   username,
+  role,
+  magasins,
+  comptes,
+  smtpPresent,
   applicants,
 }: {
   initialSettings: Settings;
   initialInvites: Invite[];
   initialTheme: Theme;
   username: string;
+  role: Role;
+  magasins: Store[];
+  comptes: CompteVue[];
+  smtpPresent: boolean;
   applicants: PreviewApplicant[];
 }) {
   const router = useRouter();
 
-  const [tab, setTab] = useState<TabId>("marque");
+  /* Les onglets ouverts à ce compte, et le premier d'entre eux par défaut. */
+  const onglets = useMemo(
+    () => TABS.filter((t) => peut({ role, storeId: null }, t.permission)),
+    [role]
+  );
+  const [tab, setTab] = useState<TabId>(() => onglets[0]?.id ?? "compte");
+
+  /**
+   * Un onglet fermé ne rend rien.
+   *
+   * Le calcul par défaut ci-dessus retombait sur « compte » quand la liste
+   * était vide, et le panneau des liens s'affichait alors à un compte qui
+   * n'avait le droit d'ouvrir aucun onglet. Se fier au seul choix de l'onglet
+   * courant ne suffit pas : il faut vérifier le droit à l'affichage.
+   */
+  const ouvert = useCallback(
+    (id: TabId) => tab === id && onglets.some((t) => t.id === id),
+    [tab, onglets]
+  );
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [baseline, setBaseline] = useState<string>(() => JSON.stringify(initialSettings));
   const [saving, setSaving] = useState(false);
@@ -132,7 +168,7 @@ export default function SettingsClient({
       {/* ---------- Onglets ---------- */}
       <div className="mt-8 border-b border-custom3">
         <div role="tablist" aria-label="Sections des réglages" className="-mb-px flex gap-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map((t) => (
+          {onglets.map((t) => (
             <button
               key={t.id}
               type="button"
@@ -162,10 +198,20 @@ export default function SettingsClient({
              Son propre état et son propre enregistrement : le thème ne passe
              pas par la même route que les réglages, et n'a donc rien à faire
              dans le « modifié / annuler » commun aux autres onglets. */}
-        {tab === "marque" ? <MarqueSection initialTheme={initialTheme} /> : null}
+        {ouvert("marque") ? <MarqueSection initialTheme={initialTheme} /> : null}
+
+        {/* ---------- 0 bis. Équipe & magasins ---------- */}
+        {ouvert("equipe") ? (
+          <EquipeSection
+            magasinsInitiaux={magasins}
+            comptesInitiaux={comptes}
+            moi={username}
+            monRole={role}
+          />
+        ) : null}
 
         {/* ---------- 1. Poste & accueil ---------- */}
-        {tab === "poste" ? (
+        {ouvert("poste") ? (
           <div>
             <header className="max-w-measure">
               <h2 className="display text-[24px] leading-tight md:text-[28px]">Poste &amp; accueil</h2>
@@ -237,7 +283,7 @@ export default function SettingsClient({
         ) : null}
 
         {/* ---------- 2. Questionnaire ---------- */}
-        {tab === "questionnaire" ? (
+        {ouvert("questionnaire") ? (
           <QuestionsSection
             questions={settings.questions}
             rules={settings.rules}
@@ -246,16 +292,27 @@ export default function SettingsClient({
         ) : null}
 
         {/* ---------- 3. Tri & pertinence ---------- */}
-        {tab === "tri" ? (
+        {ouvert("tri") ? (
           <RulesSection settings={settings} onPatch={patch} preview={preview} />
         ) : null}
 
+        {/* ---------- 3 bis. Données & e-mails ---------- */}
+        {ouvert("donnees") ? (
+          <ConformiteSection
+            settings={settings}
+            onPatch={patch}
+            smtpPresent={smtpPresent}
+            peutEnvoyerTest={peut({ role, storeId: null }, "marque")}
+          />
+        ) : null}
+
         {/* ---------- 4. Compte & liens ---------- */}
-        {tab === "compte" ? (
+        {ouvert("compte") ? (
           <AccountSection
             username={username}
             initialInvites={initialInvites}
             publicBaseUrl={settings.publicBaseUrl}
+            magasins={magasins}
           />
         ) : null}
       </div>

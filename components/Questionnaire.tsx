@@ -157,6 +157,10 @@ export default function Questionnaire({
 
   /* ---------------- envoi final ---------------- */
 
+  /* Le consentement, quand le questionnaire en demande un. */
+  const [consent, setConsent] = useState(false);
+  const consentRequis = settings.consentText.trim() !== "";
+
   const submit = useCallback(async () => {
     setSubmitting(true);
     setError(null);
@@ -169,6 +173,7 @@ export default function Questionnaire({
           answers,
           files: uploads.filter((u) => u.state === "ok" && u.payload).map((u) => u.payload),
           inviteToken,
+          consent,
         }),
       });
       const data = await res.json();
@@ -178,7 +183,7 @@ export default function Questionnaire({
       setError(err instanceof Error ? err.message : "L'envoi a échoué.");
       setSubmitting(false);
     }
-  }, [identity, answers, uploads, inviteToken, router]);
+  }, [identity, answers, uploads, inviteToken, consent, router]);
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -264,6 +269,11 @@ export default function Questionnaire({
               answers={answers}
               uploads={uploads}
               onJump={(target) => setStep(target)}
+              consentText={settings.consentText}
+              privacyContact={settings.privacyContact}
+              retentionMonths={settings.retentionMonths}
+              consent={consent}
+              onConsent={setConsent}
             />
           )}
         </div>
@@ -288,7 +298,12 @@ export default function Questionnaire({
               </p>
             )}
             {step === lastStep ? (
-              <button type="button" onClick={submit} disabled={submitting} className="btn shrink-0">
+              <button
+                type="button"
+                onClick={submit}
+                disabled={submitting || (consentRequis && !consent)}
+                className="btn shrink-0"
+              >
                 {submitting ? "Envoi…" : "Envoyer ma candidature"}
               </button>
             ) : (
@@ -808,12 +823,22 @@ function ReviewStep({
   answers,
   uploads,
   onJump,
+  consentText,
+  privacyContact,
+  retentionMonths,
+  consent,
+  onConsent,
 }: {
   identity: Identity;
   questions: Question[];
   answers: Record<string, AnswerValue>;
   uploads: Upload[];
   onJump: (step: number) => void;
+  consentText: string;
+  privacyContact: string;
+  retentionMonths: number;
+  consent: boolean;
+  onConsent: (valeur: boolean) => void;
 }) {
   const render = (value: AnswerValue) => {
     if (isEmpty(value)) return "—";
@@ -852,8 +877,42 @@ function ReviewStep({
             : uploads.map((u) => `${KIND_LABEL[u.kind]} — ${u.name}`).join(" · ")}
         </ReviewRow>
       </dl>
+
+      {/* Le consentement se demande ici, au dernier moment, une fois que le
+          candidat voit ce qu'il s'apprête à transmettre — et non au début,
+          quand il ne sait pas encore ce qu'on va lui demander. */}
+      {consentText.trim() && (
+        <div className="mt-6 rounded-carte border border-custom3 bg-wash p-4">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 shrink-0"
+              checked={consent}
+              onChange={(e) => onConsent(e.target.checked)}
+            />
+            <span className="text-[14px] leading-relaxed">{consentText}</span>
+          </label>
+          <p className="mt-3 text-[12px] leading-relaxed text-custom1">
+            {retentionMonths > 0
+              ? `Votre dossier est conservé ${dureeEnClair(retentionMonths)}, puis supprimé.`
+              : "Votre dossier est conservé jusqu'à sa suppression manuelle."}
+            {privacyContact.trim()
+              ? ` Pour y accéder, le corriger ou le faire effacer : ${privacyContact.trim()}.`
+              : ""}
+          </p>
+        </div>
+      )}
     </div>
   );
+}
+
+/** « 24 » devient « deux ans », « 18 » devient « 18 mois ». */
+function dureeEnClair(mois: number): string {
+  if (mois % 12 === 0) {
+    const ans = mois / 12;
+    return ans === 1 ? "un an" : ans === 2 ? "deux ans" : `${ans} ans`;
+  }
+  return `${mois} mois`;
 }
 
 function ReviewRow({

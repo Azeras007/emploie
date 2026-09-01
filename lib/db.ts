@@ -284,13 +284,16 @@ async function questionMeta(): Promise<Map<string, { label: string; position: nu
 export async function listApplicants(): Promise<Applicant[]> {
   if (DB_DRIVER === "postgres") return pg.listApplicants(await getPool());
   const db = await readFileDb();
-  return Object.values(db.applicants).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  return Object.values(db.applicants)
+    .map(normaliserCandidature)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
 export async function getApplicant(id: string): Promise<Applicant | null> {
   if (DB_DRIVER === "postgres") return pg.getApplicant(await getPool(), id);
   const db = await readFileDb();
-  return db.applicants[id] ?? null;
+  const brut = db.applicants[id];
+  return brut ? normaliserCandidature(brut) : null;
 }
 
 export async function findApplicantByShareToken(token: string): Promise<Applicant | null> {
@@ -347,10 +350,31 @@ export async function deleteInvite(id: string): Promise<void> {
 
 /* ---- comptes ---- */
 
+/**
+ * Complète un compte lu dans le fichier JSON.
+ *
+ * Postgres pose les valeurs par défaut lui-même (`role` à « propriétaire »,
+ * `active` à vrai). Le pilote fichier, lui, rend l'objet tel qu'il a été
+ * écrit : un compte enregistré avant l'apparition des rôles n'a ni `role` ni
+ * `active`, et `!user.active` refuserait sa session. Les deux pilotes doivent
+ * répondre la même chose.
+ */
+function normaliserUtilisateur(brut: User): User {
+  return {
+    ...brut,
+    role: brut.role ?? "proprietaire",
+    displayName: brut.displayName ?? brut.username,
+    email: brut.email ?? "",
+    storeId: brut.storeId ?? null,
+    active: brut.active !== false,
+    lastLoginAt: brut.lastLoginAt ?? null,
+  };
+}
+
 export async function listUsers(): Promise<User[]> {
   if (DB_DRIVER === "postgres") return pg.listUsers(await getPool());
   const db = await readFileDb();
-  return Object.values(db.users);
+  return Object.values(db.users).map(normaliserUtilisateur);
 }
 
 export async function findUser(username: string): Promise<User | null> {
@@ -360,10 +384,24 @@ export async function findUser(username: string): Promise<User | null> {
   return rows.find((u) => u.username.toLowerCase() === needle) ?? null;
 }
 
+/**
+ * Complète une candidature lue dans le fichier JSON — même raison que pour les
+ * comptes : les dossiers déposés avant les magasins n'ont pas ces champs.
+ */
+function normaliserCandidature(brut: Applicant): Applicant {
+  return {
+    ...brut,
+    storeId: brut.storeId ?? null,
+    consentAt: brut.consentAt ?? null,
+    purgeAt: brut.purgeAt ?? null,
+  };
+}
+
 export async function getUser(id: string): Promise<User | null> {
   if (DB_DRIVER === "postgres") return pg.getUser(await getPool(), id);
   const db = await readFileDb();
-  return db.users[id] ?? null;
+  const brut = db.users[id];
+  return brut ? normaliserUtilisateur(brut) : null;
 }
 
 export async function deleteUser(id: string): Promise<void> {

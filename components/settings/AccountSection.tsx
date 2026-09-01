@@ -3,7 +3,7 @@
 import { appPath } from "@/lib/basePath";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Invite } from "@/lib/types";
+import type { Invite, Store } from "@/lib/types";
 import { ConfirmButton, Field, Notice } from "./controls";
 import QrPanel from "./QrPanel";
 import { candidatureUrl } from "@/lib/links";
@@ -12,16 +12,19 @@ export default function AccountSection({
   username,
   initialInvites,
   publicBaseUrl,
+  magasins,
 }: {
   username: string;
   initialInvites: Invite[];
   publicBaseUrl: string;
+  magasins: Store[];
 }) {
   const router = useRouter();
 
   /* ---------- Liens d'invitation ---------- */
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
   const [label, setLabel] = useState("");
+  const [storeId, setStoreId] = useState("");
   const [creating, setCreating] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -56,12 +59,14 @@ export default function AccountSection({
       const res = await fetch(appPath("/api/admin/invitations"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label }),
+        body: JSON.stringify({ label, storeId: storeId || null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Création impossible.");
       setInvites((list) => [data.invite as Invite, ...list]);
       setLabel("");
+      // Le magasin, lui, ne se remet pas à zéro : on crée en général plusieurs
+      // liens pour le même point de vente à la suite.
       router.refresh();
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : "Création impossible.");
@@ -172,6 +177,27 @@ export default function AccountSection({
               }}
             />
           </Field>
+
+          {/* Le sélecteur n'apparaît qu'une fois des magasins créés : sans eux,
+              il n'offrirait qu'un choix vide. */}
+          {magasins.length > 0 && (
+            <Field label="Magasin" className="sm:w-56">
+              <select
+                className="box"
+                value={storeId}
+                onChange={(e) => setStoreId(e.target.value)}
+              >
+                <option value="">Aucun</option>
+                {magasins
+                  .filter((m) => m.active)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          )}
           <button
             type="button"
             className="btn min-h-[44px] shrink-0"
