@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { sessionAvec } from "@/lib/auth";
 import { saveSettings } from "@/lib/db";
 import { DEFAULT_SETTINGS } from "@/lib/defaults";
 import { uid } from "@/lib/ids";
@@ -96,7 +96,7 @@ function finite(value: number | null | undefined): number | undefined {
 class ValidationError extends Error {}
 
 export async function PUT(request: Request) {
-  const session = await getSession();
+  const session = await sessionAvec("reglages");
   if (!session) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

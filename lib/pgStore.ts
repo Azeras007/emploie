@@ -445,6 +445,15 @@ export async function listUsers(pool: Pool): Promise<User[]> {
   return rows.map(toUser);
 }
 
+export async function getUser(pool: Pool, id: string): Promise<User | null> {
+  const { rows } = await pool.query<RecruiterRow>(`select * from "Recruiter" where id = $1`, [id]);
+  return rows[0] ? toUser(rows[0]) : null;
+}
+
+export async function deleteUser(pool: Pool, id: string): Promise<void> {
+  await pool.query(`delete from "Recruiter" where id = $1`, [id]);
+}
+
 export async function findUser(pool: Pool, username: string): Promise<User | null> {
   const { rows } = await pool.query<RecruiterRow>(
     `select * from "Recruiter" where lower(username) = lower($1)`,

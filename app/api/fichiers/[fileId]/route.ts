@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import { voitDossier } from "@/lib/permissions";
 import { findApplicantByShareToken, listApplicants } from "@/lib/db";
 import { formatFor } from "@/lib/mime";
 import { readFile } from "@/lib/storage";
@@ -46,13 +47,16 @@ async function locate(fileId: string, shareToken: string | null): Promise<Stored
     if (shared) return shared;
   }
 
-  // (a) Accès administrateur : n'importe quel fichier de n'importe quelle candidature.
+  // (a) Accès administrateur — dans la limite de sa portée. Un responsable de
+  // magasin ne lit que les documents des dossiers de son magasin : sans cette
+  // vérification, la cloison ne tiendrait que dans l'affichage des listes, et
+  // une adresse de fichier suffirait à la franchir.
   const session = await getSession();
   if (!session) return null;
 
   for (const applicant of await listApplicants()) {
     const found = applicant.files.find((f) => f.id === fileId);
-    if (found) return found;
+    if (found) return voitDossier(applicant, session) ? found : null;
   }
   return null;
 }

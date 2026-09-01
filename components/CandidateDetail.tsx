@@ -13,10 +13,13 @@ import {
   STATUSES,
   type AnswerValue,
   type Applicant,
+  type Role,
   type ScoreResult,
   type Settings,
   type Status,
+  type Store,
 } from "@/lib/types";
+import { peut } from "@/lib/permissions";
 
 function longDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", {
@@ -33,12 +36,17 @@ export default function CandidateDetail({
   settings,
   score,
   previews,
+  stores,
+  role,
 }: {
   applicant: Applicant;
   settings: Settings;
   score: ScoreResult;
   previews: Record<string, PreviewPayload>;
+  stores: Store[];
+  role: Role;
 }) {
+  const magasin = stores.find((m) => m.id === applicant.storeId) ?? null;
   const router = useRouter();
   const [status, setStatus] = useState<Status>(applicant.status);
   const [notes, setNotes] = useState(applicant.notes);
@@ -114,6 +122,7 @@ export default function CandidateDetail({
           <div className="min-w-0">
             <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-custom2">
               {applicant.ref} · reçu le {longDate(applicant.createdAt)}
+              {magasin ? ` · ${magasin.name}` : ""}
             </p>
             <h1 className="display mt-2 text-[32px] leading-[1.05] md:text-[44px]">
               {applicant.identity.firstName} {applicant.identity.lastName}
@@ -184,9 +193,14 @@ export default function CandidateDetail({
             {saved && (
               <span className="text-[12px] font-semibold text-secondaire">{saved}</span>
             )}
-            <button type="button" onClick={remove} className="btn-quiet">
-              Supprimer
-            </button>
+            {/* Supprimer relève de « donnees » : un recruteur traite un
+                dossier, il ne l'efface pas. La route le vérifie aussi — ceci
+                n'est que la politesse de ne pas montrer un bouton qui refusera. */}
+            {peut({ role, storeId: null }, "donnees") && (
+              <button type="button" onClick={remove} className="btn-quiet">
+                Supprimer
+              </button>
+            )}
           </div>
         </div>
       </header>

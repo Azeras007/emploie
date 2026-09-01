@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { sessionAvec } from "@/lib/auth";
 import { deleteInvite, listInvites, saveInvite } from "@/lib/db";
 import { token as makeToken, uid } from "@/lib/ids";
 import type { Invite } from "@/lib/types";
@@ -18,7 +18,7 @@ function unauthorized() {
 
 /** GET — la liste des liens d'invitation, du plus récent au plus ancien. */
 export async function GET() {
-  const session = await getSession();
+  const session = await sessionAvec("liens");
   if (!session) return unauthorized();
 
   const invites = await listInvites();
@@ -27,7 +27,7 @@ export async function GET() {
 
 /** POST — crée un lien de candidature. */
 export async function POST(request: Request) {
-  const session = await getSession();
+  const session = await sessionAvec("liens");
   if (!session) return unauthorized();
 
   let body: unknown;
@@ -68,7 +68,7 @@ const patchSchema = z.object({
 
 /** Marque un lien comme imprimé — ou revient dessus. */
 export async function PATCH(req: Request) {
-  if (!(await getSession())) {
+  if (!(await sessionAvec("liens"))) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
@@ -93,7 +93,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await getSession();
+  const session = await sessionAvec("liens");
   if (!session) return unauthorized();
 
   const id = new URL(request.url).searchParams.get("id");

@@ -360,6 +360,19 @@ export async function findUser(username: string): Promise<User | null> {
   return rows.find((u) => u.username.toLowerCase() === needle) ?? null;
 }
 
+export async function getUser(id: string): Promise<User | null> {
+  if (DB_DRIVER === "postgres") return pg.getUser(await getPool(), id);
+  const db = await readFileDb();
+  return db.users[id] ?? null;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  if (DB_DRIVER === "postgres") return pg.deleteUser(await getPool(), id);
+  await mutateFileDb((db) => {
+    delete db.users[id];
+  });
+}
+
 export async function saveUser(user: User): Promise<User> {
   if (DB_DRIVER === "postgres") return pg.saveUser(await getPool(), user);
   await mutateFileDb((db) => {

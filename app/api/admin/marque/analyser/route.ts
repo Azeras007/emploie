@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { analyserSite, UrlRefusee } from "@/lib/aspiration";
-import { getSession } from "@/lib/auth";
+import { sessionAvec } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 // L'analyse tire une page et jusqu'à six feuilles de style : la valeur par
@@ -13,7 +13,7 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await getSession();
+  const session = await sessionAvec("marque");
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   let body: unknown;

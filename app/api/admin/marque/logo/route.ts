@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { sessionAvec } from "@/lib/auth";
 import { getTheme, oublierTheme, saveTheme } from "@/lib/db";
 import { uid } from "@/lib/ids";
 import { recupererOctets, UrlRefusee } from "@/lib/reseau";
@@ -27,7 +27,7 @@ const TYPES = new Map<string, string>([
 const TAILLE_MAX = 256 * 1024;
 
 export async function POST(request: Request) {
-  const session = await getSession();
+  const session = await sessionAvec("marque");
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const contentType = request.headers.get("content-type") ?? "";

@@ -210,8 +210,12 @@ export default function Questionnaire({
         </div>
         <div className="mx-auto flex max-w-[900px] items-center justify-between gap-4 px-5 py-3.5 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <Logo height={24} className="sm:hidden" priority />
-            <Logo height={28} className="hidden sm:inline-flex" priority />
+            {/* Une seule instance. Deux exemplaires masqués l'un après l'autre
+                donnaient au second « inline-flex » et « hidden » à la fois, et
+                c'est l'ordre du CSS généré qui tranchait — deux logotypes
+                apparaissaient sur téléphone. Quatre pixels d'écart ne valaient
+                pas ce piège. */}
+            <Logo height={26} priority />
             <span className="hidden h-6 w-px bg-custom3 sm:block" />
             <p className="hidden truncate text-[13px] text-custom1 sm:block">{settings.jobTitle}</p>
           </div>

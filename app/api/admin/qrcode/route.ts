@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { sessionAvec } from "@/lib/auth";
 import { getInviteByToken, getSettings } from "@/lib/db";
 import { candidatureUrl } from "@/lib/links";
 import { DEFAULT_COPY, posterPdf, qrPng, qrSvg, qrSvgBrand } from "@/lib/qr";
@@ -35,7 +35,7 @@ function filename(label: string, format: string, size?: number, page?: string): 
 }
 
 export async function GET(req: Request) {
-  if (!(await getSession())) {
+  if (!(await sessionAvec("liens"))) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 

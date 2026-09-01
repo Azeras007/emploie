@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { Empty, Score, StatusDot, StatusPill } from "@/components/ui";
-import { STATUSES, type Settings, type Status } from "@/lib/types";
+import { STATUSES, type Role, type Settings, type Status, type Store } from "@/lib/types";
 import type { ScoredApplicant } from "@/lib/scoring";
 
 type SortKey = "score" | "recent" | "name";
@@ -40,12 +40,17 @@ function haystack(a: ScoredApplicant): string {
 export default function PipelineClient({
   applicants,
   settings,
+  stores,
+  role,
 }: {
   applicants: ScoredApplicant[];
   settings: Settings;
+  stores: Store[];
+  role: Role;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status | "tous">("tous");
+  const [store, setStore] = useState<string>("tous");
   const [onlyPertinent, setOnlyPertinent] = useState(false);
   const [hideOut, setHideOut] = useState(settings.hideDisqualified);
   const [sort, setSort] = useState<SortKey>(settings.defaultSort);
@@ -62,10 +67,21 @@ export default function PipelineClient({
     [applicants]
   );
 
+  /* Le nom du magasin, à partir de son identifiant. */
+  const nomMagasin = useMemo(
+    () => new Map(stores.map((m) => [m.id, m.name])),
+    [stores]
+  );
+
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
     let list = applicants.filter((a) => {
       if (status !== "tous" && a.status !== status) return false;
+      if (store !== "tous") {
+        // « aucun » regroupe les dossiers déposés hors d'un lien de magasin :
+        // le questionnaire général, et les liens créés avant les magasins.
+        if (store === "aucun" ? a.storeId !== null : a.storeId !== store) return false;
+      }
       if (onlyPertinent && !a.score.pertinent) return false;
       if (hideOut && a.score.disqualified) return false;
       if (needle && !haystack(a).includes(needle)) return false;
@@ -83,7 +99,7 @@ export default function PipelineClient({
     });
 
     return list;
-  }, [applicants, query, status, onlyPertinent, hideOut, sort]);
+  }, [applicants, query, status, store, onlyPertinent, hideOut, sort]);
 
   return (
     <div>
@@ -105,6 +121,25 @@ export default function PipelineClient({
       {/* Filtres */}
       <div className="mt-8 rounded-carte border border-custom3 bg-wash p-4 md:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* Le sélecteur n'apparaît que s'il y a un choix à faire : une
+              enseigne d'un seul magasin n'a pas à voir un filtre inutile, et un
+              responsable de magasin n'a de toute façon accès qu'au sien. */}
+          {stores.length > 0 && role !== "magasin" && (
+            <select
+              className="field max-w-full lg:max-w-[14rem]"
+              value={store}
+              onChange={(e) => setStore(e.target.value)}
+              aria-label="Filtrer par magasin"
+            >
+              <option value="tous">Tous les magasins</option>
+              {stores.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+              <option value="aucun">Sans magasin</option>
+            </select>
+          )}
           <input
             className="field max-w-full lg:max-w-[22rem]"
             placeholder="Rechercher un nom, une réf, une réponse…"
@@ -201,6 +236,9 @@ export default function PipelineClient({
                   <span className="block truncate text-[13px] text-custom1">
                     {a.identity.email}
                     {a.identity.city ? ` · ${a.identity.city}` : ""}
+                    {a.storeId && nomMagasin.has(a.storeId)
+                      ? ` · ${nomMagasin.get(a.storeId)}`
+                      : ""}
                   </span>
                 </span>
                 <span className="hidden truncate text-[13px] text-custom1 lg:block">

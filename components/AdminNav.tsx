@@ -6,19 +6,23 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import Logo from "@/components/Logo";
 
-const LINKS = [
-  { href: "/admin", label: "Dossiers" },
-  { href: "/admin/reglages", label: "Réglages" },
+import { peut } from "@/lib/permissions";
+import type { Role } from "@/lib/types";
+
+const LINKS: { href: string; label: string; permission: Parameters<typeof peut>[1] }[] = [
+  { href: "/admin", label: "Dossiers", permission: "candidatures" },
+  { href: "/admin/reglages", label: "Réglages", permission: "liens" },
 ];
 
 export default function AdminNav({
   username,
+  role,
   ephemeral,
   problem,
   seen,
 }: {
   username: string;
-  brand?: string;
+  role: Role;
   ephemeral?: boolean;
   problem?: string;
   seen?: string[];
@@ -63,11 +67,12 @@ export default function AdminNav({
 
       <header className="sticky top-0 z-30 border-b border-custom3 bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1180px] items-center gap-5 px-5 py-3 md:px-8">
-          <Logo href="/admin" height={26} className="sm:hidden" priority />
-          <Logo href="/admin" height={30} className="hidden sm:inline-flex" priority />
+          <Logo href="/admin" height={28} priority />
 
           <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-none">
-            {LINKS.map((link) => (
+            {/* Un responsable de magasin n'a rien à régler : le lien disparaît
+                plutôt que de mener à une page qui le refusera. */}
+            {LINKS.filter((link) => peut({ role, storeId: null }, link.permission)).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

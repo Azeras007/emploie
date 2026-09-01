@@ -1,8 +1,10 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import { findUser, listUsers, saveUser } from "./db";
+import { findUser, getUser, listUsers, saveUser } from "./db";
+import { peut, type Permission } from "./permissions";
 import { uid } from "./ids";
 import type { User } from "./types";
 
@@ -68,14 +70,38 @@ export async function createAdmin(username: string, password: string): Promise<U
   return user;
 }
 
+/**
+ * Vérifie un couple identifiant / mot de passe.
+ *
+ * Un compte désactivé passe par la vérification du mot de passe avant d'être
+ * refusé : répondre plus tôt permettrait à un curieux de distinguer « compte
+ * désactivé » de « mot de passe faux » au chronomètre.
+ */
 export async function authenticate(username: string, password: string): Promise<User | null> {
   const user = await findUser(username);
-  if (!user) return null;
-  return (await verifyPassword(password, user.passwordHash)) ? user : null;
+  if (!user) {
+    // Un haché jeté pour rien : sans lui, un identifiant inexistant répondrait
+    // instantanément, et la liste des comptes se devinerait au temps de réponse.
+    await verifyPassword(password, "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidin");
+    return null;
+  }
+  const bon = await verifyPassword(password, user.passwordHash);
+  if (!bon || !user.active) return null;
+
+  // La dernière connexion sert à repérer les comptes dormants au moment de
+  // faire le ménage. L'échec d'écriture ne doit pas empêcher de se connecter.
+  saveUser({ ...user, lastLoginAt: new Date().toISOString() }).catch((err: unknown) => {
+    console.error("Horodatage de connexion impossible", err);
+  });
+  return user;
 }
 
 export async function startSession(user: User): Promise<void> {
-  const jwt = await new SignJWT({ uid: user.id, username: user.username })
+  // Le jeton ne porte que l'identifiant. Le rôle, le magasin et l'état du
+  // compte sont relus en base à chaque requête : un compte rétrogradé ou
+  // désactivé perd ses droits immédiatement, sans attendre l'expiration d'un
+  // jeton vieux d'une semaine.
+  const jwt = await new SignJWT({ uid: user.id })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${MAX_AGE}s`)
@@ -99,18 +125,57 @@ export async function endSession(): Promise<void> {
 export interface Session {
   uid: string;
   username: string;
+  displayName: string;
+  email: string;
+  role: User["role"];
+  storeId: string | null;
 }
 
-export async function getSession(): Promise<Session | null> {
+/**
+ * La session en cours, ou null.
+ *
+ * Enveloppée dans `cache` : une page peut l'appeler cinq fois — la garde du
+ * layout, la page elle-même, deux composants — et la base n'est interrogée
+ * qu'une seule fois par requête.
+ */
+export const getSession = cache(async (): Promise<Session | null> => {
   const store = await cookies();
   const raw = store.get(SESSION_COOKIE)?.value;
   if (!raw) return null;
+
+  let uid: string;
   try {
     const { payload } = await jwtVerify(raw, secret());
-    return { uid: String(payload.uid), username: String(payload.username) };
+    uid = String(payload.uid);
   } catch {
     return null;
   }
+
+  const user = await getUser(uid);
+  // Compte supprimé ou désactivé : le jeton reste valide, la session non.
+  if (!user || !user.active) return null;
+
+  return {
+    uid: user.id,
+    username: user.username,
+    displayName: user.displayName || user.username,
+    email: user.email,
+    role: user.role,
+    storeId: user.storeId,
+  };
+});
+
+/**
+ * La session, à condition qu'elle porte la permission demandée.
+ *
+ * Rend null dans les deux cas — pas de session, ou session sans le droit. Les
+ * routes répondent 401 dans les deux cas : distinguer « non connecté » de
+ * « connecté mais interdit » renseigne un curieux sur ce qui existe.
+ */
+export async function sessionAvec(permission: Permission): Promise<Session | null> {
+  const session = await getSession();
+  if (!session) return null;
+  return peut(session, permission) ? session : null;
 }
 
 export async function requireSession(): Promise<Session> {

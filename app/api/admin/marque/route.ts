@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { sessionAvec } from "@/lib/auth";
 import { getTheme, oublierTheme, saveTheme } from "@/lib/db";
 import { estHex } from "@/lib/couleurs";
 import type { JetonCouleur, Theme } from "@/lib/theme";
@@ -42,7 +42,7 @@ const schema = z.object({
 });
 
 export async function PUT(request: Request) {
-  const session = await getSession();
+  const session = await sessionAvec("marque");
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   let body: unknown;

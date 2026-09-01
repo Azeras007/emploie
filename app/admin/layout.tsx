@@ -21,7 +21,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-dvh">
       <AdminNav
-        username={session.username}
+        username={session.displayName}
+        role={session.role}
         ephemeral={!problem && DB_DRIVER === "file"}
         problem={problem ?? undefined}
         seen={seen}
