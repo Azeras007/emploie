@@ -2,7 +2,16 @@ import "server-only";
 import type { Pool } from "pg";
 import { uid } from "./ids";
 import { MIGRATION_HINT, SCHEMA_SQL, TABLES } from "./schema";
-import type { Applicant, AnswerValue, Invite, Settings, StoredFile, User } from "./types";
+import type {
+  Applicant,
+  AnswerValue,
+  EmailEntry,
+  Invite,
+  Settings,
+  Store,
+  StoredFile,
+  User,
+} from "./types";
 
 /**
  * Accès aux tables de recrutement.
@@ -77,6 +86,9 @@ interface ApplicationRow {
   notes: string | null;
   inviteToken: string | null;
   shareToken: string;
+  storeId: string | null;
+  consentAt: Date | null;
+  purgeAt: Date | null;
 }
 
 interface AnswerRow {
@@ -151,6 +163,9 @@ function rowsToApplicant(
     notes: app.notes ?? "",
     inviteToken: app.inviteToken,
     shareToken: app.shareToken,
+    storeId: app.storeId ?? null,
+    consentAt: app.consentAt ? app.consentAt.toISOString() : null,
+    purgeAt: app.purgeAt ? app.purgeAt.toISOString() : null,
   };
 }
 
@@ -236,8 +251,8 @@ export async function saveApplicant(
     await client.query(
       `insert into "JobApplication"
          (id, reference, "createdAt", "updatedAt", "firstName", "lastName", email, phone, city,
-          status, rating, notes, "inviteToken", "shareToken")
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+          status, rating, notes, "inviteToken", "shareToken", "storeId", "consentAt", "purgeAt")
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
        on conflict (id) do update set
          "updatedAt" = excluded."updatedAt",
          "firstName" = excluded."firstName",
@@ -247,7 +262,8 @@ export async function saveApplicant(
          city        = excluded.city,
          status      = excluded.status,
          rating      = excluded.rating,
-         notes       = excluded.notes`,
+         notes       = excluded.notes,
+         "storeId"   = excluded."storeId"`,
       [
         applicant.id,
         applicant.ref,
@@ -263,6 +279,9 @@ export async function saveApplicant(
         applicant.notes || null,
         applicant.inviteToken,
         applicant.shareToken,
+        applicant.storeId,
+        applicant.consentAt,
+        applicant.purgeAt,
       ]
     );
 
@@ -337,6 +356,7 @@ interface InviteRow {
   uses: number;
   active: boolean;
   printed: boolean;
+  storeId: string | null;
 }
 
 const toInvite = (r: InviteRow): Invite => ({
@@ -347,6 +367,7 @@ const toInvite = (r: InviteRow): Invite => ({
   uses: r.uses,
   active: r.active,
   printed: r.printed,
+  storeId: r.storeId ?? null,
 });
 
 export async function listInvites(pool: Pool): Promise<Invite[]> {
@@ -365,11 +386,12 @@ export async function getInviteByToken(pool: Pool, token: string): Promise<Invit
 
 export async function saveInvite(pool: Pool, invite: Invite): Promise<Invite> {
   await pool.query(
-    `insert into "JobInviteLink" (id, token, label, "createdAt", uses, active, printed)
-     values ($1,$2,$3,$4,$5,$6,$7)
+    `insert into "JobInviteLink" (id, token, label, "createdAt", uses, active, printed, "storeId")
+     values ($1,$2,$3,$4,$5,$6,$7,$8)
      on conflict (id) do update set
        label = excluded.label, uses = excluded.uses,
-       active = excluded.active, printed = excluded.printed`,
+       active = excluded.active, printed = excluded.printed,
+       "storeId" = excluded."storeId"`,
     [
       invite.id,
       invite.token,
@@ -378,6 +400,7 @@ export async function saveInvite(pool: Pool, invite: Invite): Promise<Invite> {
       invite.uses,
       invite.active,
       Boolean(invite.printed),
+      invite.storeId ?? null,
     ]
   );
   return invite;
@@ -396,6 +419,12 @@ interface RecruiterRow {
   username: string;
   passwordHash: string;
   createdAt: Date;
+  role: string;
+  displayName: string;
+  email: string;
+  storeId: string | null;
+  active: boolean;
+  lastLoginAt: Date | null;
 }
 
 const toUser = (r: RecruiterRow): User => ({
@@ -403,6 +432,12 @@ const toUser = (r: RecruiterRow): User => ({
   username: r.username,
   passwordHash: r.passwordHash,
   createdAt: r.createdAt.toISOString(),
+  role: (r.role as User["role"]) ?? "recruteur",
+  displayName: r.displayName || r.username,
+  email: r.email ?? "",
+  storeId: r.storeId ?? null,
+  active: r.active !== false,
+  lastLoginAt: r.lastLoginAt ? r.lastLoginAt.toISOString() : null,
 });
 
 export async function listUsers(pool: Pool): Promise<User[]> {
@@ -420,12 +455,133 @@ export async function findUser(pool: Pool, username: string): Promise<User | nul
 
 export async function saveUser(pool: Pool, user: User): Promise<User> {
   await pool.query(
-    `insert into "Recruiter" (id, username, "passwordHash", "createdAt")
-     values ($1,$2,$3,$4)
-     on conflict (id) do update set username = excluded.username, "passwordHash" = excluded."passwordHash"`,
-    [user.id, user.username.slice(0, 40), user.passwordHash, user.createdAt]
+    `insert into "Recruiter"
+       (id, username, "passwordHash", "createdAt", role, "displayName", email, "storeId", active, "lastLoginAt")
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     on conflict (id) do update set
+       username       = excluded.username,
+       "passwordHash" = excluded."passwordHash",
+       role           = excluded.role,
+       "displayName"  = excluded."displayName",
+       email          = excluded.email,
+       "storeId"      = excluded."storeId",
+       active         = excluded.active,
+       "lastLoginAt"  = excluded."lastLoginAt"`,
+    [
+      user.id,
+      user.username.slice(0, 40),
+      user.passwordHash,
+      user.createdAt,
+      user.role,
+      user.displayName.slice(0, 80),
+      user.email.slice(0, 160),
+      user.storeId,
+      user.active,
+      user.lastLoginAt,
+    ]
   );
   return user;
+}
+
+/* ------------------------------------------------------------------ *
+ * Magasins
+ * ------------------------------------------------------------------ */
+
+interface StoreRow {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  active: boolean;
+  createdAt: Date;
+}
+
+const toStore = (r: StoreRow): Store => ({
+  id: r.id,
+  name: r.name,
+  city: r.city ?? "",
+  address: r.address ?? "",
+  active: r.active !== false,
+  createdAt: r.createdAt.toISOString(),
+});
+
+export async function listStores(pool: Pool): Promise<Store[]> {
+  const { rows } = await pool.query<StoreRow>(`select * from "Store" order by name`);
+  return rows.map(toStore);
+}
+
+export async function saveStore(pool: Pool, store: Store): Promise<Store> {
+  await pool.query(
+    `insert into "Store" (id, name, city, address, active, "createdAt")
+     values ($1,$2,$3,$4,$5,$6)
+     on conflict (id) do update set
+       name = excluded.name, city = excluded.city,
+       address = excluded.address, active = excluded.active`,
+    [
+      store.id,
+      store.name.slice(0, 120),
+      store.city.slice(0, 80),
+      store.address.slice(0, 240),
+      store.active,
+      store.createdAt,
+    ]
+  );
+  return store;
+}
+
+/**
+ * Supprime un magasin. Les candidatures et les liens qui le visaient ne
+ * disparaissent pas : leur `storeId` passe à null (contrainte `on delete set
+ * null`). Fermer un magasin ne doit pas effacer les dossiers qu'il a reçus.
+ */
+export async function deleteStore(pool: Pool, id: string): Promise<void> {
+  await pool.query(`delete from "Store" where id = $1`, [id]);
+}
+
+/* ------------------------------------------------------------------ *
+ * Journal des envois
+ * ------------------------------------------------------------------ */
+
+interface EmailRow {
+  id: string;
+  applicationId: string | null;
+  kind: string;
+  recipient: string;
+  subject: string;
+  sentAt: Date;
+  error: string | null;
+}
+
+export async function logEmail(pool: Pool, entree: EmailEntry): Promise<void> {
+  await pool.query(
+    `insert into "EmailLog" (id, "applicationId", kind, recipient, subject, "sentAt", error)
+     values ($1,$2,$3,$4,$5,$6,$7)`,
+    [
+      entree.id,
+      entree.applicationId,
+      entree.kind.slice(0, 40),
+      entree.recipient.slice(0, 240),
+      entree.subject.slice(0, 240),
+      entree.sentAt,
+      entree.error ? entree.error.slice(0, 800) : null,
+    ]
+  );
+}
+
+export async function listEmails(pool: Pool, limite = 200): Promise<EmailEntry[]> {
+  const { rows } = await pool.query<EmailRow>(
+    `select * from "EmailLog" order by "sentAt" desc limit $1`,
+    [limite]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    applicationId: r.applicationId,
+    kind: r.kind,
+    recipient: r.recipient,
+    subject: r.subject,
+    sentAt: r.sentAt.toISOString(),
+    error: r.error,
+  }));
 }
 
 export async function getSettings(pool: Pool): Promise<Settings | null> {

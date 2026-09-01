@@ -14,6 +14,12 @@ const basePath = process.env.BASE_PATH ?? "/candidature";
 
 const nextConfig: NextConfig = {
   basePath: basePath || undefined,
+  /**
+   * Un `next build` lancé pendant qu'un serveur de développement tourne écrase
+   * les fragments que celui-ci sert encore, et la page se retrouve sans style,
+   * sans script, avec des 404 partout. `npm run verif` bâtit donc ailleurs.
+   */
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   serverExternalPackages: ["pg", "mammoth", "bcryptjs"],
   // Exposé au navigateur : les <img> et <link> écrits à la main doivent
   // préfixer eux-mêmes leur chemin, contrairement à next/link.

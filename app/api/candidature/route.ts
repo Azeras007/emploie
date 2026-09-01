@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getInviteByToken, getSettings, saveApplicant, saveInvite } from "@/lib/db";
+import { envoyerApresDepot } from "@/lib/courriel";
 import { makeRef, token as makeToken, uid } from "@/lib/ids";
 import { verifyFile } from "@/lib/signing";
 import type { Applicant, AnswerValue, StoredFile } from "@/lib/types";
@@ -31,7 +32,23 @@ const bodySchema = z.object({
   answers: z.record(z.union([z.string(), z.number(), z.array(z.string()), z.null()])),
   files: z.array(fileSchema).max(12),
   inviteToken: z.string().nullable().optional(),
+  /** La case de consentement, quand le questionnaire en demande une. */
+  consent: z.boolean().optional(),
 });
+
+/**
+ * La date de péremption du dossier, figée à l'enregistrement.
+ *
+ * `setMonth` gère seul les fins de mois : au 31 janvier plus un mois, il rend
+ * le 2 ou le 3 mars. Pour une durée de conservation, ce décalage d'un jour est
+ * sans conséquence, et le code reste lisible.
+ */
+function datePurge(depot: Date, mois: number): string | null {
+  if (!Number.isFinite(mois) || mois <= 0) return null;
+  const date = new Date(depot);
+  date.setMonth(date.getMonth() + Math.round(mois));
+  return date.toISOString();
+}
 
 export async function POST(req: Request) {
   let json: unknown;
@@ -48,7 +65,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  const { identity, answers, files, inviteToken } = parsed.data;
+  const { identity, answers, files, inviteToken, consent } = parsed.data;
 
   const settings = await getSettings();
 
@@ -88,6 +105,20 @@ export async function POST(req: Request) {
     if (known.has(key)) cleanAnswers[key] = value as AnswerValue;
   }
 
+  // Le consentement, s'il est demandé, est vérifié ici et pas seulement dans le
+  // navigateur : une case cochée côté client ne prouve rien.
+  if (settings.consentText.trim() && !consent) {
+    return NextResponse.json(
+      { error: "Le consentement est nécessaire pour enregistrer votre candidature." },
+      { status: 400 }
+    );
+  }
+
+  // Le lien d'invitation désigne le magasin. Un jeton inconnu ou désactivé
+  // n'est pas une erreur — le questionnaire général répond à sa place — mais il
+  // ne rattache alors la candidature à aucun magasin.
+  const invite = inviteToken ? await getInviteByToken(inviteToken) : null;
+
   const now = new Date();
   const applicant: Applicant = {
     id: uid(),
@@ -102,14 +133,21 @@ export async function POST(req: Request) {
     notes: "",
     inviteToken: inviteToken || null,
     shareToken: makeToken(20),
+    storeId: invite?.storeId ?? null,
+    consentAt: settings.consentText.trim() ? now.toISOString() : null,
+    purgeAt: datePurge(now, settings.retentionMonths),
   };
 
   await saveApplicant(applicant);
 
-  if (inviteToken) {
-    const invite = await getInviteByToken(inviteToken);
-    if (invite) await saveInvite({ ...invite, uses: invite.uses + 1 });
-  }
+  if (invite) await saveInvite({ ...invite, uses: invite.uses + 1 });
+
+  // L'envoi ne doit jamais faire échouer un dépôt : le candidat a rempli dix
+  // questions et déposé son CV, tout est enregistré. Un serveur d'envoi en
+  // panne est un problème du recruteur, pas du candidat.
+  envoyerApresDepot(applicant, settings).catch((err: unknown) => {
+    console.error("Envoi des e-mails de candidature impossible", err);
+  });
 
   return NextResponse.json({ ok: true, ref: applicant.ref });
 }

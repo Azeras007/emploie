@@ -112,4 +112,30 @@ export const DEFAULT_SETTINGS: Settings = {
   publicBaseUrl: "https://recrutement.kiabi.com",
   intro:
     "Dix questions, cinq minutes. Répondez franchement : c'est ce qui nous permet de vous proposer des horaires qui vous vont vraiment.",
+
+  // Deux ans : la durée que retient le référentiel de la CNIL pour une
+  // candidature non retenue, comptés depuis le dépôt.
+  retentionMonths: 24,
+  consentText:
+    "J'accepte que mes réponses et mes documents soient conservés pour l'étude de ma candidature.",
+  privacyContact: "",
+
+  emails: {
+    // Rien ne part tant qu'un serveur d'envoi n'a pas été configuré : une
+    // application qui tente d'envoyer sans pouvoir le faire produit des
+    // erreurs à chaque candidature, et le candidat en fait les frais.
+    enabled: false,
+    from: "",
+    replyTo: "",
+    acknowledge: true,
+    acknowledgeSubject: "Votre candidature chez {{enseigne}}",
+    acknowledgeBody:
+      "Bonjour {{prenom}},\n\n" +
+      "Nous avons bien reçu votre candidature. Elle porte la référence {{reference}}.\n\n" +
+      "Nous la lisons et revenons vers vous rapidement.\n\n" +
+      "L'équipe {{enseigne}}",
+    notify: true,
+    notifySubject: "Nouvelle candidature — {{prenom}} {{nom}} ({{score}} %)",
+    notifyExtra: "",
+  },
 };

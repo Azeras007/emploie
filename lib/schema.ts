@@ -16,6 +16,9 @@ export const TABLES: Record<string, string[]> = {
   JobApplication: [
     "id",
     "reference",
+    "storeId",
+    "consentAt",
+    "purgeAt",
     "createdAt",
     "updatedAt",
     "firstName",
@@ -49,8 +52,21 @@ export const TABLES: Record<string, string[]> = {
     "storageKey",
     "uploadedAt",
   ],
-  JobInviteLink: ["id", "token", "label", "createdAt", "uses", "active", "printed"],
-  Recruiter: ["id", "username", "passwordHash", "createdAt"],
+  JobInviteLink: ["id", "token", "label", "createdAt", "uses", "active", "printed", "storeId"],
+  Recruiter: [
+    "id",
+    "username",
+    "passwordHash",
+    "createdAt",
+    "role",
+    "displayName",
+    "email",
+    "storeId",
+    "active",
+    "lastLoginAt",
+  ],
+  Store: ["id", "name", "city", "address", "active", "createdAt"],
+  EmailLog: ["id", "applicationId", "kind", "recipient", "subject", "sentAt", "error"],
   RecruitmentSetting: ["id", "data", "updatedAt"],
 };
 
@@ -128,6 +144,15 @@ create table if not exists "JobInviteLink" (
   "printed"   boolean not null default false
 );
 
+create table if not exists "Store" (
+  "id"        text primary key,
+  "name"      text not null,
+  "city"      text not null default '',
+  "address"   text not null default '',
+  "active"    boolean not null default true,
+  "createdAt" timestamptz not null default now()
+);
+
 create table if not exists "Recruiter" (
   "id"           text primary key,
   "username"     text not null,
@@ -135,10 +160,58 @@ create table if not exists "Recruiter" (
   "createdAt"    timestamptz not null default now()
 );
 
+-- Journal des envois. Un e-mail qui n'arrive pas est le pire des silences :
+-- le candidat croit sa candidature perdue, le recruteur ne sait rien. La trace
+-- garde la raison de l'échec, pas seulement le fait qu'il a eu lieu.
+create table if not exists "EmailLog" (
+  "id"            text primary key,
+  "applicationId" text references "JobApplication"("id") on delete cascade,
+  "kind"          text not null,
+  "recipient"     text not null,
+  "subject"       text not null default '',
+  "sentAt"        timestamptz not null default now(),
+  "error"         text
+);
+
+create index if not exists "EmailLog_applicationId_idx"
+  on "EmailLog" ("applicationId");
+
 -- L'identifiant est insensible à la casse : « Maud » et « maud » sont le même
 -- compte, comme le suppose findUser().
 create unique index if not exists "Recruiter_username_key"
   on "Recruiter" (lower("username"));
+
+-- ── Ajouts ultérieurs ────────────────────────────────────────────────────────
+--
+-- « add column if not exists » plutôt qu'un fichier de migration numéroté : une
+-- installation neuve et une installation déjà en service passent par le même
+-- chemin, et le script reste rejouable. Aucune de ces instructions ne touche
+-- une donnée existante.
+
+alter table "JobApplication"
+  add column if not exists "storeId"   text references "Store"("id") on delete set null,
+  -- Horodatage du consentement, et date de purge calculée à l'enregistrement :
+  -- une candidature porte sa propre date de péremption, plutôt que de dépendre
+  -- d'un réglage qui aura changé entre-temps.
+  add column if not exists "consentAt" timestamptz,
+  add column if not exists "purgeAt"   timestamptz;
+
+create index if not exists "JobApplication_storeId_idx" on "JobApplication" ("storeId");
+create index if not exists "JobApplication_purgeAt_idx" on "JobApplication" ("purgeAt");
+
+alter table "JobInviteLink"
+  add column if not exists "storeId" text references "Store"("id") on delete set null;
+
+alter table "Recruiter"
+  -- « proprietaire » par défaut : sur une base déjà en service, le compte
+  -- unique existant est celui qui administrait tout. Le rétrograder au passage
+  -- l'enfermerait dehors.
+  add column if not exists "role"        text not null default 'proprietaire',
+  add column if not exists "displayName" text not null default '',
+  add column if not exists "email"       text not null default '',
+  add column if not exists "storeId"     text references "Store"("id") on delete set null,
+  add column if not exists "active"      boolean not null default true,
+  add column if not exists "lastLoginAt" timestamptz;
 
 create table if not exists "RecruitmentSetting" (
   "id"        text primary key,

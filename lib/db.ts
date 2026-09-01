@@ -6,17 +6,19 @@ import * as pg from "./pgStore";
 import { MIGRATION_HINT } from "./schema";
 import { normaliserTheme, THEME_PAR_DEFAUT, type Theme } from "./theme";
 import { filesReport } from "./storage";
-import type { Applicant, Invite, Settings, User } from "./types";
+import type { Applicant, EmailEntry, Invite, Settings, Store, User } from "./types";
 
 /** Forme du fichier JSON de développement. */
 interface Shape {
   applicants: Record<string, Applicant>;
   invites: Record<string, Invite>;
   users: Record<string, User>;
+  stores: Record<string, Store>;
+  emails: EmailEntry[];
   meta: Record<string, unknown>;
 }
 
-const EMPTY: Shape = { applicants: {}, invites: {}, users: {}, meta: {} };
+const EMPTY: Shape = { applicants: {}, invites: {}, users: {}, stores: {}, emails: [], meta: {} };
 
 /**
  * Certains hébergeurs préfixent les variables d'une intégration
@@ -364,6 +366,56 @@ export async function saveUser(user: User): Promise<User> {
     db.users[user.id] = user;
   });
   return user;
+}
+
+/* ---- magasins ---- */
+
+export async function listStores(): Promise<Store[]> {
+  if (DB_DRIVER === "postgres") return pg.listStores(await getPool());
+  const db = await readFileDb();
+  return Object.values(db.stores ?? {}).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
+
+export async function saveStore(store: Store): Promise<Store> {
+  if (DB_DRIVER === "postgres") return pg.saveStore(await getPool(), store);
+  await mutateFileDb((db) => {
+    db.stores = db.stores ?? {};
+    db.stores[store.id] = store;
+  });
+  return store;
+}
+
+export async function deleteStore(id: string): Promise<void> {
+  if (DB_DRIVER === "postgres") return pg.deleteStore(await getPool(), id);
+  await mutateFileDb((db) => {
+    delete db.stores?.[id];
+    // Le pilote fichier n'a pas de clé étrangère : on détache à la main, pour
+    // que les deux implémentations se comportent pareil.
+    for (const candidature of Object.values(db.applicants)) {
+      if (candidature.storeId === id) candidature.storeId = null;
+    }
+    for (const lien of Object.values(db.invites)) {
+      if (lien.storeId === id) lien.storeId = null;
+    }
+  });
+}
+
+/* ---- journal des envois ---- */
+
+export async function logEmail(entree: EmailEntry): Promise<void> {
+  if (DB_DRIVER === "postgres") return pg.logEmail(await getPool(), entree);
+  await mutateFileDb((db) => {
+    db.emails = db.emails ?? [];
+    db.emails.unshift(entree);
+    // En développement, le journal n'a pas vocation à croître sans fin.
+    db.emails = db.emails.slice(0, 500);
+  });
+}
+
+export async function listEmails(limite = 200): Promise<EmailEntry[]> {
+  if (DB_DRIVER === "postgres") return pg.listEmails(await getPool(), limite);
+  const db = await readFileDb();
+  return (db.emails ?? []).slice(0, limite);
 }
 
 /* ---- réglages ---- */

@@ -65,6 +65,18 @@ export interface Applicant {
   notes: string;
   inviteToken: string | null;
   shareToken: string;
+  /** Le magasin visé, quand le lien d'invitation en désignait un. */
+  storeId: string | null;
+  /** Horodatage du consentement du candidat, s'il a été demandé. */
+  consentAt: string | null;
+  /**
+   * La date à laquelle le dossier doit disparaître.
+   *
+   * Calculée à l'enregistrement, et non déduite d'un réglage à la lecture : la
+   * durée de conservation annoncée au candidat est celle qui valait au moment
+   * où il a postulé, même si elle change ensuite.
+   */
+  purgeAt: string | null;
 }
 
 export type Operator =
@@ -131,6 +143,40 @@ export interface Settings {
    * vous maîtrisez, pas l'URL de l'hébergeur du moment.
    */
   publicBaseUrl: string;
+
+  /* ---- RGPD ---- */
+
+  /**
+   * Durée de conservation des dossiers, en mois. 0 désactive la purge.
+   *
+   * Le référentiel de la CNIL retient deux ans après le dernier contact pour
+   * une candidature non retenue ; la valeur reste réglable, une enseigne
+   * pouvant avoir sa propre politique.
+   */
+  retentionMonths: number;
+  /** La case à cocher avant l'envoi. Vide : aucun consentement n'est demandé. */
+  consentText: string;
+  /** Qui contacter pour l'exercice des droits — affiché au candidat. */
+  privacyContact: string;
+
+  /* ---- Envoi d'e-mails ---- */
+
+  emails: {
+    /** Rien n'est envoyé tant que ceci est faux. */
+    enabled: boolean;
+    /** L'adresse d'expédition, et celle où arrivent les réponses. */
+    from: string;
+    replyTo: string;
+    /** Accusé de réception au candidat. */
+    acknowledge: boolean;
+    acknowledgeSubject: string;
+    acknowledgeBody: string;
+    /** Alerte aux recruteurs à chaque dépôt. */
+    notify: boolean;
+    notifySubject: string;
+    /** Destinataires supplémentaires, en plus des comptes qui ont une adresse. */
+    notifyExtra: string;
+  };
 }
 
 export interface Invite {
@@ -145,13 +191,86 @@ export interface Invite {
    * être repris : la suppression du lien est alors bloquée dans les réglages.
    */
   printed?: boolean;
+  /**
+   * Le magasin auquel ce lien rattache les candidatures.
+   *
+   * C'est ce qui rend un QR de devanture utile à une enseigne de trente
+   * magasins : le code collé sur la vitrine de Lille dépose les dossiers dans
+   * la liste de Lille, sans que le candidat ait à choisir.
+   */
+  storeId?: string | null;
 }
+
+/**
+ * Les quatre rôles, du plus large au plus étroit.
+ *
+ * `proprietaire` est celui de l'éditeur du produit : lui seul touche à la
+ * marque et aux réglages techniques. `administrateur` est le client — il règle
+ * son questionnaire, ses magasins et ses recruteurs, mais ne peut pas
+ * défigurer l'application ni lire les identifiants du serveur d'envoi.
+ * `magasin` ne voit que les candidatures de son point de vente : c'est ce qui
+ * rend le produit vendable à une enseigne de trente magasins.
+ */
+export type Role = "proprietaire" | "administrateur" | "recruteur" | "magasin";
+
+export const ROLES: { value: Role; label: string; help: string }[] = [
+  {
+    value: "proprietaire",
+    label: "Propriétaire",
+    help: "Tout, y compris la marque, les envois d'e-mails et les comptes.",
+  },
+  {
+    value: "administrateur",
+    label: "Administrateur",
+    help: "Le questionnaire, le tri, les magasins, les comptes recruteurs.",
+  },
+  {
+    value: "recruteur",
+    label: "Recruteur",
+    help: "Toutes les candidatures, aucun réglage.",
+  },
+  {
+    value: "magasin",
+    label: "Responsable de magasin",
+    help: "Uniquement les candidatures de son magasin.",
+  },
+];
 
 export interface User {
   id: string;
   username: string;
   passwordHash: string;
   createdAt: string;
+  role: Role;
+  /** Le nom affiché dans l'interface et signé au bas des e-mails. */
+  displayName: string;
+  /** Facultatif : sert aux alertes de nouvelle candidature. */
+  email: string;
+  /** Renseigné pour le rôle « magasin » — sa portée de lecture. */
+  storeId: string | null;
+  /** Un compte désactivé ne peut plus se connecter, mais reste dans l'historique. */
+  active: boolean;
+  lastLoginAt: string | null;
+}
+
+export interface Store {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  active: boolean;
+  createdAt: string;
+}
+
+/** Une trace d'envoi — réussi ou non. */
+export interface EmailEntry {
+  id: string;
+  applicationId: string | null;
+  kind: string;
+  recipient: string;
+  subject: string;
+  sentAt: string;
+  error: string | null;
 }
 
 export interface ScoreResult {

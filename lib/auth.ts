@@ -46,12 +46,23 @@ export async function hasAdmin(): Promise<boolean> {
   return users.length > 0;
 }
 
+/**
+ * Le tout premier compte. Il est propriétaire : c'est celui qui installe, et il
+ * doit pouvoir tout régler, la marque comprise. Les comptes suivants se créent
+ * depuis les réglages, avec le rôle qu'on leur choisit.
+ */
 export async function createAdmin(username: string, password: string): Promise<User> {
   const user: User = {
     id: uid(),
     username: username.trim(),
     passwordHash: await hashPassword(password),
     createdAt: new Date().toISOString(),
+    role: "proprietaire",
+    displayName: username.trim(),
+    email: "",
+    storeId: null,
+    active: true,
+    lastLoginAt: null,
   };
   await saveUser(user);
   return user;

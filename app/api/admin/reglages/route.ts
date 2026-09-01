@@ -54,6 +54,24 @@ const settingsSchema = z.object({
   companyName: z.string(),
   intro: z.string(),
   publicBaseUrl: z.string().optional(),
+
+  retentionMonths: z.coerce.number().min(0).max(240).optional(),
+  consentText: z.string().max(600).optional(),
+  privacyContact: z.string().max(240).optional(),
+
+  emails: z
+    .object({
+      enabled: z.boolean(),
+      from: z.string().max(160),
+      replyTo: z.string().max(160),
+      acknowledge: z.boolean(),
+      acknowledgeSubject: z.string().max(200),
+      acknowledgeBody: z.string().max(4000),
+      notify: z.boolean(),
+      notifySubject: z.string().max(200),
+      notifyExtra: z.string().max(600),
+    })
+    .optional(),
 });
 
 /* ------------------------------------------------------------------ *
@@ -209,6 +227,44 @@ function clean(input: z.infer<typeof settingsSchema>): Settings {
     companyName: input.companyName.trim(),
     intro: input.intro.trim(),
     publicBaseUrl: normalizeBaseUrl(input.publicBaseUrl),
+
+    retentionMonths: Math.max(0, Math.min(240, Math.round(input.retentionMonths ?? DEFAULT_SETTINGS.retentionMonths))),
+    consentText: (input.consentText ?? DEFAULT_SETTINGS.consentText).trim(),
+    privacyContact: (input.privacyContact ?? DEFAULT_SETTINGS.privacyContact).trim(),
+
+    emails: nettoyerEmails(input.emails),
+  };
+}
+
+/**
+ * Les réglages d'envoi.
+ *
+ * Une adresse d'expédition invalide ne fait pas échouer l'enregistrement : elle
+ * coupe les envois. Refuser tout le formulaire parce qu'une adresse est mal
+ * tapée bloquerait aussi les réglages du questionnaire, sans rapport.
+ */
+function nettoyerEmails(brut: z.infer<typeof settingsSchema>["emails"]): Settings["emails"] {
+  const d = DEFAULT_SETTINGS.emails;
+  if (!brut) return { ...d };
+
+  const adresse = (valeur: string) => {
+    const propre = valeur.trim();
+    return /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(propre) ? propre : "";
+  };
+
+  const from = adresse(brut.from);
+  return {
+    // Sans expéditeur valide, l'envoi ne peut pas fonctionner : on le désarme
+    // plutôt que de laisser croire qu'il est actif.
+    enabled: Boolean(brut.enabled) && from !== "",
+    from,
+    replyTo: adresse(brut.replyTo),
+    acknowledge: Boolean(brut.acknowledge),
+    acknowledgeSubject: brut.acknowledgeSubject.trim() || d.acknowledgeSubject,
+    acknowledgeBody: brut.acknowledgeBody.trim() || d.acknowledgeBody,
+    notify: Boolean(brut.notify),
+    notifySubject: brut.notifySubject.trim() || d.notifySubject,
+    notifyExtra: brut.notifyExtra.trim(),
   };
 }
 
