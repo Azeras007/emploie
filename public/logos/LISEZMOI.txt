@@ -1,20 +1,19 @@
-Logotypes officiels Kiabi
-=========================
+Logotypes
+=========
 
-Ce dossier est volontairement vide : le dépôt n'embarque aucun fichier de
-marque. En l'absence de logotype, l'application compose « Kiabi » en Figtree
-très gras, au bleu pétrole #040037 (voir components/Logo.tsx).
+Ce dossier est vide, et le dépôt n'embarque aucun fichier de marque.
 
-Pour utiliser le logotype officiel :
+Dans la marche normale, le logotype d'une enseigne s'importe depuis le
+back-office — Réglages → Marque → Logotype — soit d'un fichier choisi sur le
+poste, soit d'un clic sur l'un de ceux que l'analyse de son site a repérés. Il
+est alors rangé en base avec le reste du thème : une sauvegarde de la base
+suffit à tout restaurer, et il n'y a pas de dossier de fichiers à traîner à
+côté.
 
-  1. déposez le fichier ici, par exemple  public/logos/kiabi.svg
-  2. renseignez son chemin dans le .env  NEXT_PUBLIC_LOGO_FILE=/logos/kiabi.svg
-  3. redémarrez l'application
+Ce dossier ne sert que pour le cas particulier d'un logotype que l'on préfère
+servir en statique. Déposez-le ici, puis indiquez son chemin dans le champ
+« Logotype » des réglages, sous la forme /logos/mon-fichier.svg. Ce chemin
+l'emporte alors sur l'import.
 
-Le lettrage est alors remplacé partout — en-tête du questionnaire, back-office,
-page de confirmation, page 404 — sans toucher au code.
-
-L'affiche PDF des QR codes (lib/qr.ts) reprend elle aussi ce fichier, à
-condition qu'il soit au format PNG ou JPEG : pdf-lib ne sait pas embarquer de
-SVG. Prévoyez donc, si vous voulez le logotype sur les affiches, une version
-  public/logos/kiabi.png
+Attention : un déploiement qui recopie le dépôt effacera ce dossier. C'est
+précisément la raison pour laquelle l'import en base est la voie recommandée.

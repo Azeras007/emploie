@@ -57,15 +57,35 @@ export default function PipelineClient({
 
   const summaryQuestion = settings.questions.find((q) => q.type === "single");
 
-  const stats = useMemo(
-    () => ({
+  const stats = useMemo(() => {
+    const trenteJours = Date.now() - 30 * 24 * 3600 * 1000;
+    return {
       total: applicants.length,
+      recents: applicants.filter((a) => Date.parse(a.createdAt) >= trenteJours).length,
       nouveaux: applicants.filter((a) => a.status === "nouveau").length,
       pertinents: applicants.filter((a) => a.score.pertinent).length,
       ecartes: applicants.filter((a) => a.score.disqualified).length,
-    }),
-    [applicants]
-  );
+    };
+  }, [applicants]);
+
+  /**
+   * Le volume par magasin.
+   *
+   * C'est le chiffre qu'une direction regarde en premier : quel point de vente
+   * attire, lequel ne reçoit rien — et donc où l'affiche est mal placée.
+   */
+  const parMagasin = useMemo(() => {
+    if (stores.length === 0 || role === "magasin") return [];
+    const comptes = new Map<string, number>();
+    let sans = 0;
+    for (const a of applicants) {
+      if (!a.storeId) sans += 1;
+      else comptes.set(a.storeId, (comptes.get(a.storeId) ?? 0) + 1);
+    }
+    const lignes = stores.map((m) => ({ nom: m.name, n: comptes.get(m.id) ?? 0 }));
+    if (sans > 0) lignes.push({ nom: "Sans magasin", n: sans });
+    return lignes.sort((a, b) => b.n - a.n);
+  }, [applicants, stores, role]);
 
   /* Le nom du magasin, à partir de son identifiant. */
   const nomMagasin = useMemo(
@@ -112,11 +132,27 @@ export default function PipelineClient({
 
         <dl className="grid w-full grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:w-auto sm:flex-wrap sm:items-end sm:gap-x-8 sm:gap-y-3">
           <Stat label="Reçus" value={stats.total} />
+          <Stat label="30 derniers jours" value={stats.recents} />
           <Stat label="Nouveaux" value={stats.nouveaux} />
           <Stat label={`Pertinents (≥ ${settings.threshold})`} value={stats.pertinents} />
           <Stat label="Écartés" value={stats.ecartes} />
         </dl>
       </div>
+
+      {parMagasin.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {parMagasin.map((ligne) => (
+            <span
+              key={ligne.nom}
+              className="pill border-custom3 bg-paper text-custom1"
+              title={`${ligne.n} candidature${ligne.n > 1 ? "s" : ""}`}
+            >
+              {ligne.nom}
+              <span className="ml-2 font-bold tabular-nums text-ink">{ligne.n}</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Filtres */}
       <div className="mt-8 rounded-carte border border-custom3 bg-wash p-4 md:p-5">

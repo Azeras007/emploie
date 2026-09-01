@@ -14,7 +14,7 @@ export const runtime = "nodejs";
  * portée du compte — un responsable de magasin n'exporte que le sien, sans
  * quoi le bouton d'export serait le trou dans la cloison.
  */
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getSession();
   if (!peut(session, "donnees")) {
     return new Response("Non autorisé", { status: 401 });

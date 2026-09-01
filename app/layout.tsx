@@ -23,10 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: `Déposez votre candidature chez ${theme.nom} : questionnaire, CV et lettre.`,
     applicationName: theme.nom,
-    icons: {
-      icon: `${BASE_PATH}/api/marque/favicon`,
-      apple: `${BASE_PATH}/apple-touch-icon.png`,
-    },
+    // Une seule icône, dessinée à la volée aux couleurs de l'enseigne. Aucun
+    // fichier statique : un produit en marque blanche ne doit embarquer le
+    // logotype de personne, et surtout pas celui du client précédent.
+    icons: { icon: `${BASE_PATH}/api/marque/favicon` },
     // Un espace de candidature n'a rien à faire dans un index de recherche :
     // les CV qui y transitent sont des données personnelles.
     robots: { index: false, follow: false },

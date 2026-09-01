@@ -1,11 +1,14 @@
-// Configuration PM2 de l'espace candidature Kiabi.
+// Configuration PM2 par défaut.
 //
-// ⚠️ AUCUN SECRET ICI — ce fichier est versionné. AUTH_SECRET, DATABASE_URL et
-// UPLOAD_DIR vivent dans le `.env` de la machine.
+// Pour une instance client, `scripts/nouveau-client.mjs` engendre sa propre
+// version de ce fichier, avec le nom de l'enseigne et son port.
+//
+// ⚠️ AUCUN SECRET ICI — ce fichier est versionné. AUTH_SECRET, DATABASE_URL,
+// UPLOAD_DIR et SMTP_URL vivent dans le `.env` de la machine.
 module.exports = {
   apps: [
     {
-      name: "kiabi-recrutement",
+      name: "candidatures",
       script: "npm",
       args: "start",
       cwd: __dirname,
