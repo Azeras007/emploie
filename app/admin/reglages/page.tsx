@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getSettings, listApplicants, listInvites } from "@/lib/db";
+import { getSettings, getTheme, listApplicants, listInvites } from "@/lib/db";
 import SettingsClient, { type PreviewApplicant } from "@/components/settings/SettingsClient";
 
 export const metadata: Metadata = { title: "Réglages" };
@@ -14,10 +14,11 @@ export default async function ReglagesPage() {
   // Le layout admin garde déjà la porte ; ceci est une sécurité de second rideau.
   if (!session) redirect("/connexion");
 
-  const [settings, invites, applicants] = await Promise.all([
+  const [settings, invites, applicants, theme] = await Promise.all([
     getSettings(),
     listInvites(),
     listApplicants(),
+    getTheme(),
   ]);
 
   // On n'envoie au client que ce qui sert à simuler le score (ni notes, ni statut).
@@ -32,6 +33,7 @@ export default async function ReglagesPage() {
     <SettingsClient
       initialSettings={settings}
       initialInvites={invites}
+      initialTheme={theme}
       username={session.username}
       applicants={preview}
     />

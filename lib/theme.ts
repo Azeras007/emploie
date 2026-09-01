@@ -75,9 +75,26 @@ export interface Theme {
     carte: number;
   };
   logo: {
-    /** Chemin du fichier officiel, servi depuis public/. Vide = lettrage. */
+    /** Chemin d'un fichier servi depuis public/. Prioritaire sur `donnees`. */
     fichier: string;
-    /** Le lettrage de repli, quand aucun fichier n'est fourni. */
+    /**
+     * Le logotype importé, en base64.
+     *
+     * Rangé dans le thème plutôt que sur le disque : habiller une enseigne
+     * redevient alors une seule ligne en base — que l'on sauvegarde, restaure
+     * et duplique d'un `pg_dump`, sans traîner un dossier de fichiers à côté.
+     * Un logotype pèse quelques dizaines de kilo-octets ; la limite est fixée
+     * à 256 Ko dans la route d'import.
+     */
+    donnees: string;
+    /** Le type MIME du logotype importé. */
+    type: string;
+    /**
+     * Change à chaque import. Sert de paramètre d'URL pour que le navigateur
+     * cesse de servir l'ancien logotype après un changement de charte.
+     */
+    version: string;
+    /** Le lettrage de repli, quand aucun logotype n'est fourni. */
     mot: string;
     /** Vrai pour composer le lettrage en capitales. */
     capitales: boolean;
@@ -95,7 +112,7 @@ export const THEME_PAR_DEFAUT: Theme = {
   ajustements: {},
   polices: { titre: "Figtree", texte: "Inter" },
   rayons: { champ: 12, carte: 16 },
-  logo: { fichier: "", mot: "Candidatures", capitales: false },
+  logo: { fichier: "", donnees: "", type: "", version: "", mot: "Candidatures", capitales: false },
 };
 
 /* ------------------------------------------------------------------ *
@@ -175,6 +192,38 @@ export function themeCss(theme: Theme): string {
   return `:root{\n${lignes.join("\n")}\n}`;
 }
 
+/**
+ * Les mêmes variables, en objet — pour les appliquer à un élément React.
+ *
+ * L'éditeur s'en sert pour son aperçu : poser ces variables sur un conteneur
+ * suffit à ce que tout ce qu'il contient prenne le thème en cours de réglage,
+ * sans rien enregistrer ni recharger.
+ */
+export function themeVars(theme: Theme): Record<string, string> {
+  const palette = derivePalette(theme);
+  const vars: Record<string, string> = {};
+  for (const [jeton, hex] of Object.entries(palette)) vars[`--${jeton}`] = canaux(hex);
+  vars["--rayon-champ"] = `${Math.max(0, theme.rayons.champ)}px`;
+  vars["--rayon-carte"] = `${Math.max(0, theme.rayons.carte)}px`;
+  vars["--police-titre"] = cssFamille(theme.polices.titre);
+  vars["--police-texte"] = cssFamille(theme.polices.texte);
+  return vars;
+}
+
+/**
+ * L'adresse du logotype, ou null s'il n'y en a pas.
+ *
+ * Un fichier déposé dans public/ l'emporte sur un logotype importé : c'est le
+ * réglage explicite, et il doit pouvoir reprendre la main.
+ */
+export function logoUrl(theme: Theme): string | null {
+  if (theme.logo.fichier) return theme.logo.fichier;
+  if (theme.logo.donnees) {
+    return `/api/marque/logo${theme.logo.version ? `?v=${encodeURIComponent(theme.logo.version)}` : ""}`;
+  }
+  return null;
+}
+
 /** La pile de repli d'une famille : la police du client, puis celles du système. */
 function cssFamille(nom: string): string {
   const propre = (nom || "").trim().replace(/["']/g, "");
@@ -229,6 +278,9 @@ export function normaliserTheme(brut: Partial<Theme> | null | undefined): Theme 
     },
     logo: {
       fichier: brut.logo?.fichier?.trim() || "",
+      donnees: typeof brut.logo?.donnees === "string" ? brut.logo.donnees : "",
+      type: brut.logo?.type?.trim() || "",
+      version: brut.logo?.version?.trim() || "",
       mot: brut.logo?.mot?.trim() || brut.nom?.trim() || d.logo.mot,
       capitales: Boolean(brut.logo?.capitales),
     },

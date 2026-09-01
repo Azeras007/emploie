@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { MarqueProvider } from "@/components/Marque";
 import { BASE_PATH } from "@/lib/basePath";
 import { getTheme } from "@/lib/db";
-import { derivePalette, googleFontsUrl, themeCss } from "@/lib/theme";
+import { derivePalette, googleFontsUrl, logoUrl, themeCss } from "@/lib/theme";
 import "./globals.css";
 
 /**
@@ -61,7 +61,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <style dangerouslySetInnerHTML={{ __html: themeCss(theme) }} />
       </head>
       <body className="min-h-dvh antialiased">
-        <MarqueProvider marque={{ nom: theme.nom, logo: theme.logo }}>{children}</MarqueProvider>
+        <MarqueProvider
+          marque={{
+            nom: theme.nom,
+            logoUrl: logoUrl(theme),
+            mot: theme.logo.mot,
+            capitales: theme.logo.capitales,
+          }}
+        >
+          {children}
+        </MarqueProvider>
       </body>
     </html>
   );

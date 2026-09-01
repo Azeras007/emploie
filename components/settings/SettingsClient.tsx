@@ -5,8 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { scoreApplicant } from "@/lib/scoring";
+import type { Theme } from "@/lib/theme";
 import type { Applicant, Invite, Question, Settings } from "@/lib/types";
 import AccountSection from "./AccountSection";
+import MarqueSection from "./MarqueSection";
 import QuestionsSection from "./QuestionsSection";
 import RulesSection, { type RulesPreview } from "./RulesSection";
 import { Field, Notice } from "./controls";
@@ -14,9 +16,10 @@ import { Field, Notice } from "./controls";
 /** Projection minimale d'une candidature : de quoi simuler le score, rien de plus. */
 export type PreviewApplicant = Pick<Applicant, "id" | "identity" | "answers" | "files">;
 
-type TabId = "poste" | "questionnaire" | "tri" | "compte";
+type TabId = "marque" | "poste" | "questionnaire" | "tri" | "compte";
 
 const TABS: { id: TabId; label: string }[] = [
+  { id: "marque", label: "Marque" },
   { id: "poste", label: "Poste & accueil" },
   { id: "questionnaire", label: "Questionnaire" },
   { id: "tri", label: "Tri & pertinence" },
@@ -26,17 +29,19 @@ const TABS: { id: TabId; label: string }[] = [
 export default function SettingsClient({
   initialSettings,
   initialInvites,
+  initialTheme,
   username,
   applicants,
 }: {
   initialSettings: Settings;
   initialInvites: Invite[];
+  initialTheme: Theme;
   username: string;
   applicants: PreviewApplicant[];
 }) {
   const router = useRouter();
 
-  const [tab, setTab] = useState<TabId>("poste");
+  const [tab, setTab] = useState<TabId>("marque");
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [baseline, setBaseline] = useState<string>(() => JSON.stringify(initialSettings));
   const [saving, setSaving] = useState(false);
@@ -153,6 +158,12 @@ export default function SettingsClient({
         aria-labelledby={`onglet-${tab}`}
         className="pt-10"
       >
+        {/* ---------- 0. Marque ----------
+             Son propre état et son propre enregistrement : le thème ne passe
+             pas par la même route que les réglages, et n'a donc rien à faire
+             dans le « modifié / annuler » commun aux autres onglets. */}
+        {tab === "marque" ? <MarqueSection initialTheme={initialTheme} /> : null}
+
         {/* ---------- 1. Poste & accueil ---------- */}
         {tab === "poste" ? (
           <div>

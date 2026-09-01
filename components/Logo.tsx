@@ -27,13 +27,13 @@ export default function Logo({
   className?: string;
   priority?: boolean;
 }) {
-  const { nom, logo } = useMarque();
-  const texte = logo.mot || nom;
+  const { nom, logoUrl, mot, capitales } = useMarque();
+  const texte = mot || nom;
 
-  const marque = logo.fichier ? (
+  const marque = logoUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`${BASE_PATH}${logo.fichier}`}
+      src={`${BASE_PATH}${logoUrl}`}
       alt={nom}
       style={{ height, width: "auto", objectFit: "contain" }}
       loading={priority ? "eager" : "lazy"}
@@ -42,7 +42,7 @@ export default function Logo({
     />
   ) : (
     <span
-      className={`font-display font-extrabold text-primaire ${logo.capitales ? "uppercase" : ""}`}
+      className={`font-display font-extrabold text-primaire ${capitales ? "uppercase" : ""}`}
       // Le lettrage occupe `height` pixels de haut, quel que soit l'endroit où
       // il est posé : les appels raisonnent en pixels, comme avec une image.
       style={{ fontSize: height * 0.86, lineHeight: 1, letterSpacing: "-0.005em" }}
