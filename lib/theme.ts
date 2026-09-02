@@ -63,10 +63,21 @@ export interface Theme {
    */
   ajustements: Partial<Record<JetonCouleur, string>>;
   polices: {
-    /** Famille des titres. Doit exister sur Google Fonts. */
+    /** Famille des titres. */
     titre: string;
     /** Famille du texte courant. */
     texte: string;
+    /**
+     * Familles que Google Fonts ne sert pas.
+     *
+     * Une enseigne fait souvent dessiner sa police, ou l'achète chez un
+     * fondeur : « Kiabi Sans » n'est nulle part. Demander une famille inconnue
+     * à Google produit une requête en échec et un rendu dans la police
+     * système, sans que rien ne l'explique. On garde donc le nom — il sert si
+     * la police est installée sur le poste ou servie par ailleurs — mais on
+     * cesse de la réclamer.
+     */
+    hebergees: string[];
   };
   rayons: {
     /** Rayon des champs de saisie, en pixels. */
@@ -110,7 +121,7 @@ export const THEME_PAR_DEFAUT: Theme = {
     encre: "#12141c",
   },
   ajustements: {},
-  polices: { titre: "Figtree", texte: "Inter" },
+  polices: { titre: "Figtree", texte: "Inter", hebergees: [] },
   rayons: { champ: 12, carte: 16 },
   logo: { fichier: "", donnees: "", type: "", version: "", mot: "Candidatures", capitales: false },
 };
@@ -240,9 +251,11 @@ function cssFamille(nom: string): string {
  */
 export function googleFontsUrl(theme: Theme): string | null {
   const familles: string[] = [];
+  const hebergees = new Set((theme.polices.hebergees ?? []).map((f) => f.trim().toLowerCase()));
   const ajouter = (nom: string, graisses: string) => {
     const propre = (nom || "").trim();
     if (!propre) return;
+    if (hebergees.has(propre.toLowerCase())) return;
     const encode = propre.replace(/\s+/g, "+");
     const entree = `family=${encode}:wght@${graisses}`;
     if (!familles.includes(entree)) familles.push(entree);
@@ -271,6 +284,9 @@ export function normaliserTheme(brut: Partial<Theme> | null | undefined): Theme 
     polices: {
       titre: brut.polices?.titre?.trim() || d.polices.titre,
       texte: brut.polices?.texte?.trim() || d.polices.texte,
+      hebergees: Array.isArray(brut.polices?.hebergees)
+        ? brut.polices.hebergees.filter((f): f is string => typeof f === "string" && f.trim() !== "")
+        : [],
     },
     rayons: {
       champ: Number.isFinite(brut.rayons?.champ) ? Number(brut.rayons?.champ) : d.rayons.champ,

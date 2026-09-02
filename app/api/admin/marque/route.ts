@@ -23,9 +23,13 @@ const schema = z.object({
   polices: z.object({
     titre: z.string().max(60),
     texte: z.string().max(60),
+    hebergees: z.array(z.string().max(60)).max(8).default([]),
   }),
+  // 48 des deux côtés : un champ en pilule est un choix de charte courant, et
+  // l'analyse d'un site qui en emploie proposait une valeur que
+  // l'enregistrement refusait ensuite.
   rayons: z.object({
-    champ: z.coerce.number().min(0).max(40),
+    champ: z.coerce.number().min(0).max(48),
     carte: z.coerce.number().min(0).max(48),
   }),
   // Le logotype importé ne transite pas ici : ses octets sont écrits par

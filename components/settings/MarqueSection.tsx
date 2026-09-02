@@ -23,11 +23,22 @@ import { Field, Notice } from "./controls";
  * demande pas.
  */
 
+interface Trouvaille {
+  valeur: string;
+  origine: string;
+}
+
 interface Proposition {
   source: string;
-  couleurs: { primaire: string | null; accent: string | null; encre: string | null };
-  polices: { titre: string | null; texte: string | null };
-  logos: string[];
+  couleurs: {
+    primaire: Trouvaille | null;
+    accent: Trouvaille | null;
+    retenu: Trouvaille | null;
+    encre: Trouvaille | null;
+  };
+  polices: { titre: Trouvaille | null; texte: Trouvaille | null; hebergees: string[] };
+  rayons: { champ: number | null; carte: number | null };
+  logos: { url: string; origine: string }[];
   palette: { hex: string; poids: number; origine: string }[];
   journal: string[];
 }
@@ -144,22 +155,43 @@ export default function MarqueSection({ initialTheme }: { initialTheme: Theme })
     }
   }
 
-  /** Reprend ce que l'analyse a trouvé, sans écraser ce qu'elle n'a pas trouvé. */
+  /**
+   * Reprend ce que l'analyse a trouvé, sans écraser ce qu'elle n'a pas trouvé.
+   *
+   * Les corrections manuelles posées avant l'analyse sont effacées : elles
+   * portaient sur l'ancienne charte, et les garder produirait un mélange des
+   * deux — la pire des issues, parce qu'elle a l'air délibérée.
+   */
   function appliquer(p: Proposition) {
     setTheme((t) => ({
       ...t,
       couleurs: {
-        primaire: p.couleurs.primaire ?? t.couleurs.primaire,
-        accent: p.couleurs.accent ?? t.couleurs.accent,
-        retenu: t.couleurs.retenu,
-        encre: p.couleurs.encre ?? t.couleurs.encre,
+        primaire: p.couleurs.primaire?.valeur ?? t.couleurs.primaire,
+        accent: p.couleurs.accent?.valeur ?? t.couleurs.accent,
+        retenu: p.couleurs.retenu?.valeur ?? t.couleurs.retenu,
+        encre: p.couleurs.encre?.valeur ?? t.couleurs.encre,
       },
+      ajustements: {},
       polices: {
-        titre: p.polices.titre ?? t.polices.titre,
-        texte: p.polices.texte ?? t.polices.texte,
+        titre: p.polices.titre?.valeur ?? t.polices.titre,
+        texte: p.polices.texte?.valeur ?? t.polices.texte,
+        hebergees: p.polices.hebergees,
+      },
+      rayons: {
+        champ: p.rayons.champ ?? t.rayons.champ,
+        carte: p.rayons.carte ?? t.rayons.carte,
       },
     }));
   }
+
+  /** L'origine relevée pour une couleur, si l'analyse en a proposé une. */
+  const origineDe = (cle: keyof Proposition["couleurs"]): string | undefined => {
+    const trouvee = proposition?.couleurs[cle];
+    if (!trouvee) return undefined;
+    return theme.couleurs[cle === "retenu" ? "retenu" : cle] === trouvee.valeur
+      ? trouvee.origine
+      : undefined;
+  };
 
   /** Importe un logotype, d'une adresse ou d'un fichier local. */
   async function importerLogo(source: { url: string } | { fichier: File }) {
@@ -318,26 +350,35 @@ export default function MarqueSection({ initialTheme }: { initialTheme: Theme })
             {proposition.logos.length > 0 && (
               <div className="mt-4">
                 <p className="eyebrow">Logotypes repérés — cliquez pour importer</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {proposition.logos.map((url) => (
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {proposition.logos.map((logo) => (
                     <button
-                      key={url}
+                      key={logo.url}
                       type="button"
-                      title={url}
+                      title={logo.url}
                       disabled={importEnCours !== null}
-                      onClick={() => importerLogo({ url })}
-                      className="grid h-14 w-24 place-items-center rounded-champ border border-custom3 bg-paper p-1.5 transition-colors hover:border-primaire disabled:opacity-40"
+                      onClick={() => importerLogo({ url: logo.url })}
+                      className="w-28 rounded-champ border border-custom3 bg-paper p-2 text-left transition-colors hover:border-primaire disabled:opacity-40"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={url}
-                        alt=""
-                        className="max-h-full max-w-full object-contain"
-                        loading="lazy"
-                      />
+                      <span className="grid h-12 place-items-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={logo.url}
+                          alt=""
+                          className="max-h-full max-w-full object-contain"
+                          loading="lazy"
+                        />
+                      </span>
+                      <span className="mt-1.5 block truncate text-[11px] text-custom2">
+                        {logo.origine}
+                      </span>
                     </button>
                   ))}
                 </div>
+                <p className="mt-2 text-[12px] leading-relaxed text-custom1">
+                  Rien ne s&apos;importe tout seul : le logotype reste votre choix, et le lettrage
+                  ci-dessous convient très bien pour une démonstration.
+                </p>
                 {importEnCours && importEnCours !== "suppression" && (
                   <p className="mt-2 text-[12px] text-custom1">Import en cours…</p>
                 )}
@@ -354,24 +395,28 @@ export default function MarqueSection({ initialTheme }: { initialTheme: Theme })
           <Couleur
             label="Principale"
             aide="Boutons, aplats sombres, titres."
+            releve={origineDe("primaire")}
             valeur={theme.couleurs.primaire}
             onChange={(v) => patch({ couleurs: { ...theme.couleurs, primaire: v } })}
           />
           <Couleur
             label="Accent"
             aide="Jauges, alertes, petits repères."
+            releve={origineDe("accent")}
             valeur={theme.couleurs.accent}
             onChange={(v) => patch({ couleurs: { ...theme.couleurs, accent: v } })}
           />
           <Couleur
             label="Profils retenus"
             aide="La seule couleur positive de l'interface."
+            releve={origineDe("retenu")}
             valeur={theme.couleurs.retenu}
             onChange={(v) => patch({ couleurs: { ...theme.couleurs, retenu: v } })}
           />
           <Couleur
             label="Encre"
             aide="Le texte courant."
+            releve={origineDe("encre")}
             valeur={theme.couleurs.encre}
             onChange={(v) => patch({ couleurs: { ...theme.couleurs, encre: v } })}
           />
@@ -467,10 +512,27 @@ export default function MarqueSection({ initialTheme }: { initialTheme: Theme })
           ))}
         </datalist>
 
+        {theme.polices.hebergees.length > 0 && (
+          <div className="rounded-carte border border-corail/40 bg-corail-pale p-4 sm:col-span-2">
+            <p className="text-[13px] leading-relaxed text-corail-fonce">
+              {theme.polices.hebergees.join(", ")}{" "}
+              {theme.polices.hebergees.length > 1 ? "ne sont pas" : "n'est pas"} sur Google Fonts :
+              l&apos;enseigne {theme.polices.hebergees.length > 1 ? "les héberge" : "l'héberge"}{" "}
+              elle-même. L&apos;application ne {theme.polices.hebergees.length > 1 ? "les" : "la"}{" "}
+              réclame donc pas — le rendu utilisera la police système, ou la vraie si elle est
+              installée sur le poste.
+            </p>
+            <p className="mt-2 text-[12px] leading-relaxed text-corail-fonce">
+              Choisissez une famille approchante ci-dessus, ou demandez le fichier de police au
+              client.
+            </p>
+          </div>
+        )}
+
         <Curseur
           label="Arrondi des champs"
           valeur={theme.rayons.champ}
-          max={40}
+          max={48}
           onChange={(v) => patch({ rayons: { ...theme.rayons, champ: v } })}
         />
         <Curseur
@@ -611,12 +673,15 @@ export default function MarqueSection({ initialTheme }: { initialTheme: Theme })
 function Couleur({
   label,
   aide,
+  releve,
   valeur,
   onChange,
   onEffacer,
 }: {
   label: string;
   aide?: string;
+  /** D'où l'analyse a tiré cette couleur, tant qu'elle n'a pas été modifiée. */
+  releve?: string;
   valeur: string;
   onChange: (v: string) => void;
   onEffacer?: () => void;
@@ -651,7 +716,11 @@ function Couleur({
           </button>
         )}
       </div>
-      {aide && <p className="mt-1 text-[12px] text-custom2">{aide}</p>}
+      {releve ? (
+        <p className="mt-1 text-[12px] text-corail-fonce">Relevé : {releve}</p>
+      ) : aide ? (
+        <p className="mt-1 text-[12px] text-custom2">{aide}</p>
+      ) : null}
     </div>
   );
 }
